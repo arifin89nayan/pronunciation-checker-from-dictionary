@@ -1,7 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsFormsApp1.Models;
+using WindowsFormsApp1.Services;
 
 namespace WindowsFormsApp1
 {
@@ -37,7 +45,26 @@ namespace WindowsFormsApp1
                         txt_OutFilePath.Text = folderPath;
                         
                     }
+                    // Create original backup
+                    CreateOriginalCopy(selectedFilePath, folderPath);
                 }
+            }
+        }
+        private void CreateOriginalCopy(string sourceFilePath, string folderPath)
+        {
+            try
+            {
+                string extension = Path.GetExtension(sourceFilePath); // .xlsx
+                string backupFilePath = Path.Combine(folderPath, "dic-original" + extension);
+
+                // If already exists → overwrite
+                File.Copy(sourceFilePath, backupFilePath, true);
+
+               
+            }
+            catch (Exception ex)
+            {
+                AppendLog("❌ Backup creation failed: " + ex.Message);
             }
         }
 

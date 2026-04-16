@@ -1,0 +1,81 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="WindowsFormsApp1.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="AniFontName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">BIZ UDPゴシック</Value>
+    </Setting>
+    <Setting Name="AniFontColor" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Black</Value>
+    </Setting>
+    <Setting Name="AniFontSize" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">20</Value>
+    </Setting>
+    <Setting Name="AniFontStyle" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Bold</Value>
+    </Setting>
+    <Setting Name="Language" Type="System.String" Scope="User">
+      <Value Profile="(Default)">English</Value>
+    </Setting>
+    <Setting Name="Gender" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Male</Value>
+    </Setting>
+    <Setting Name="Voice" Type="System.String" Scope="User">
+      <Value Profile="(Default)">en-US-BrianNeural</Value>
+    </Setting>
+    <Setting Name="PlayConfigFilePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="CapFontName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Microsoft Sans Serif</Value>
+    </Setting>
+    <Setting Name="CapFontColor" Type="System.String" Scope="User">
+      <Value Profile="(Default)">White</Value>
+    </Setting>
+    <Setting Name="CapFontSize" Type="System.Single" Scope="User">
+      <Value Profile="(Default)">18</Value>
+    </Setting>
+    <Setting Name="CapFontStyle" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Bold</Value>
+    </Setting>
+    <Setting Name="CapBgColor" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Black</Value>
+    </Setting>
+    <Setting Name="TextTitle" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="AudioDataPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\Iwate University japan\IPU Final Project\New Requirement 2025\Audio Data Files</Value>
+    </Setting>
+    <Setting Name="OutPutPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\Iwate University japan\IPU Final Project\New Requirement 2025\OutPut</Value>
+    </Setting>
+    <Setting Name="TemplatePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\Iwate University japan\Work\Template Data</Value>
+    </Setting>
+    <Setting Name="CsvFilePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">D:\Iwate University japan\IPU Final Project\New Requirement 2025</Value>
+    </Setting>
+    <Setting Name="QuizAnsDetailsOffset" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="ExcelLanguage" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="IbcSelectFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="IbcOutputFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="OutPutIbcFile" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="txt_dicfiles" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="txt_OutFilePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+  </Settings>
+</SettingsFile>

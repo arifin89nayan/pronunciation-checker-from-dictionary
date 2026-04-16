@@ -1,0 +1,253 @@
+----------------------------------------------------
+2016.12.29
+
+Added support for scrolling text with images
+
+V:003
+total scene numbers; Total number of scenes
+<a><h/v>;
+a: Scene number h/v = 1 vertical, h/v = 0 horizontal h/v = 2 Scene to switch to different content
+
+#if h/v != 2
+<f1><f2><f3><f4><f5><f6>;
+f1=1 Do not stop playback.
+f2=1 Do not FF.
+f3=1 Do not RW.
+f4=1 Do not pause.
+f5=1 Do not change volume
+
+f6=1-100 Audio setting (0 does not change)
+
+#if h/v = 2
+
+<Type><Destination><Priority><next scene No.>;
+
+Destination 8-digit hexadecimal reference ID
+
+Type = 0, Destination is RFID ID
+
+Type = 1, Destination is content ID
+
+Example: <0><ABCD1001><128><0>
+
+<b>;
+
+Scene switching mode B=1; Switch when Audio/video ends B=0 Other methods
+
+<c>;
+
+Scene time Unit: ms
+
+<M><e><d>;
+
+e=0;NoPlay, e=1;PlayOnce,e=2;Repeat;e=3 FM, e=4 PAN_VoIP;
+
+if e < 3 d=BGM file name;
+
+if e = 3 d = FM frequency (KMｚ): FM radio wave minimum level
+if e = 4 d = PAN channel
+
+<B><*0> ;
+Background screen settings *If X, specify RGB color. Or the file name of the background image
+
+<A><m><n>　；
+m:0:NO CONFIRM, 1:CONFIRM 2:SELECTION BRANCH
+n: Next scene number; Branch scene, or 0 for the last scene
+
+<W>
+<V><video file name><0><70><240><180><q>　；
+q＝１　Vertical, q＝0　Horizontal
+
+<T><text_offset:text_length><x0><y0><width><height><text_RGB><BackColor1><BackColor2><multi-backcolor-mode><LyricMode ><NC><scroll-direction><scroll-speed><mult-lines><text_type>
+
+BackColor1=256*256*256+1 Transparent background;NC=0, not used
+scroll-direction:1=left, 2= right, 3=down, 4=up,
+5=no scroll
+multi-line=0; single line only, multi-line=1; multiple lines
+
+text_type = 0; only this is supported currently
+
+multi-backcolor-mod = 0; no two-tone background.
+
+LyricMode = 0; not in lyric mode. LyricMode = 1; Lyric mode
+
+<T><0:7478><0><183><240><136><65280><0><0><0><0><0><4><1000><1><0>
+
+<P><image file name><x0><y0><width><height> <image number><interval><type>
+interval: Image switching interval, type: 0: PICTURE, 1: Animation
+
+<P><0.jpg><0><2><201><150> <1><0><0>
+
+//caption Subtitles
+
+<C><image file name><x0><y0><width><height> <t1><t2><scroll direction H/V><show mode>
+
+t1: Scroll start time (ms) t2: Scroll end time (ms).
+
+scroll direction H/V: = 1 vertical = 0 horizontal
+show mode =1 once =0 repeat
+
+<C><guide.bmp><0><20><240><280><2000><10000><1><0>
+
+//branch
+<S><0><0><240><320> <branch number> <>
+For images
+<N><P><1.jpg><97><26><91><91><1><0><0>
+<H><P><2.jpg><97><26><91><91><1><0><0>
+<x>
+
+x: The scene number to which the branch is connected
+
+For text
+<N><T><50:12><43><153><197><98><16777215><0><0><0><0><0><1><0><0><0>
+<H><T><62:12><43><153><197><98><16711680><0><0><0><0><0><1><0><0><0>
+<x>
+
+<E>
+
+***** *
+V:002
+1
+<001><1>
+<0><0><0><0><0><0>
+<0>
+<0>
+<M><76100><6>
+<B><*0>
+<A><1><0>
+<W>
+<P><0.jpg;1.jpg><0><145><240><175><2><300><1>
+<W>
+<T><50:216><0><0><240><141><16777215><0><0><0><0><0><4><3000><1><0>
+<E>
+
+-------------------------------------------------
+2021.6.17
+
+Added confirmation function
+
+V:003
+total scene numbers ; Total number of scenes
+<A><h/v>　；
+
+A=a + Mode
+
+Mode = 0x00
+a: Scene number h/v = 1 vertical, h/v = 0 horizontal h/v = 2 Scene to switch to another content
+
+Mode = 0x80
+{Only a = 0, 1 are valid} Scene in View More mode
+
+#if h/v != 2
+<f1><f2><f3><f4><f5><f6> ;
+f1=1 Do not stop playback.
+f2=1 Do not FF.
+f3=1 Do not RW.
+f4=1 Do not pause.
+f5=1 Do not change volume
+
+f6=1-100 Audio setting (0 does not change)
+
+#if h/v = 2
+
+<Type><Destination><Priority><next scene No.>;
+
+Destination 8-digit hexadecimal reference ID
+
+Type = 0, Destination is RFID ID
+
+Type = 1, Destination is content ID
+
+Example: <0><ABCD1001><128><0>
+
+<b>;
+
+Scene switching mode B=1; Switch when Audio/video ends B=0 Other methods
+
+<c>;
+
+Scene time Unit: ms
+
+<M><e><d>;
+
+e=0;NoPlay, e=1;PlayOnce,e=2;Repeat;e=3 FM, e=4 PAN_VoIP;
+
+if e < 3 d=BGM file name;
+
+if e = 3 d = FM frequency (KMｚ): FM radio wave minimum level
+if e = 4 d = PAN channel
+
+<B><*0> ;
+Background screen settings *If X, specify RGB color. Or the file name of the background image
+
+<A><m><n>　；
+m:0:NO CONFIRM, 1:CONFIRM 2:SELECTION BRANCH
+n: Next scene number; Branch scene, or 0 for the last scene
+
+<W>
+<V><video file name><0><70><240><180><q>　；
+q＝１　Vertical, q＝0　Horizontal
+
+<T><text_offset:text_length><x0><y0><width><height><text_RGB><BackColor1><BackColor2><multi-backcolor-mode><LyricMode ><NC><scroll-direction><scroll-speed><mult-lines><text_type>
+
+BackColor1=256*256*256+1 Transparent background;NC=0, not used
+scroll-direction:1=left, 2= right, 3=down, 4=up,
+5=no scroll
+multi-line=0; single line only, multi-line=1; multiple lines
+
+text_type = 0; only this is supported currently
+
+multi-backcolor-mod = 0; no two-tone background.
+
+LyricMode = 0; not in lyric mode.LyricMode = 1; Lyric mode
+
+<T><0:7478><0><183><240><136><65280><0><0><0><0><0><4><1000><1><0>
+
+<P><image file name><x0><y0><width><height> <image number><interval><type>
+interval: image switching interval, type: 0: PICTURE, 1: animation
+
+<P><0.jpg><0><2><201><150> <1><0><0>
+
+//caption subtitles
+
+<C><image file name base ><x0><y0><width><height><image block number><image block size><image height size><t1><t2><t3><scroll direction H/V><show mode>
+
+image file structure: (image file name base)+(serial No).jpg serial No from 1 to (image block number)
+t1: Start time of scrolling (ms) t2: End time of scrolling (ms). t3: ​​Interval of repeat display (ms)
+
+scroll direction H/V: = 1 Vertical direction = 0 Horizontal direction
+show mode =1 Once = 0 Repeat
+
+<C><8fd7><0><0><240><294><3><360><990><1000><5500><2000><0><1>
+
+//Branch
+<S><0><0><240><320> <branch number> <>
+For images
+<N><P><1.jpg><97><26><91><91><1><0><0>
+<H><P><2.jpg><97><26><91><91><1><0><0>
+<x>
+
+x: The scene number to which the branch is connected
+
+For text
+<N><T><50:12><43><153><197><98><16777215><0><0><0><0><0><1><0><0><0>
+<H><T><62:12><43><153><197><98><16711680><0><0><0><0> ><0><1><0><0><0>
+<x>
+
+<E>
+
+******
+V:002
+1
+<001><1>
+<0><0><0><0><0><0>
+<0>
+<0>
+<M><76100><6>
+<B><*0>
+<A><1><0>
+<W>
+<P><0.jpg;1.jpg><0><145><240><175><2><300><1>
+<W>
+<T><50:216><0><0><240><141><16777215><0><0><0><0><0><4><3000><1><0>
+<E>
