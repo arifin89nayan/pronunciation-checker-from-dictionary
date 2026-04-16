@@ -1,0 +1,230 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using WindowsFormsApp1.Models;
+using WindowsFormsApp1.Services;
+
+namespace WindowsFormsApp1
+{
+    public partial class DictionaryFiles : Form
+    {
+        public DictionaryFiles()
+        {
+            InitializeComponent();
+            txt_dicfiles.Text = Properties.Settings.Default.txt_dicfiles;
+            txt_OutFilePath.Text = Properties.Settings.Default.txt_OutFilePath;
+        }
+
+        private void btn_DicFiles_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+
+                openFileDialog.Title = "Select a File";
+                openFileDialog.Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
+
+                openFileDialog.Multiselect = false;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string selectedFilePath = openFileDialog.FileName;
+                    txt_dicfiles.Text = selectedFilePath;
+                    
+                    // Auto set output folder
+                    string folderPath = Path.GetDirectoryName(selectedFilePath);
+
+                    if (!string.IsNullOrWhiteSpace(folderPath))
+                    {
+                        txt_OutFilePath.Text = folderPath;
+                        
+                    }
+                }
+            }
+        }
+
+        private void SDataOutPut_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "Select a Folder";
+                folderDialog.ShowNewFolderButton = true;
+
+                if (folderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    txt_OutFilePath.Text = folderDialog.SelectedPath;
+                }
+            }
+        }
+
+        private void Back_button_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private async void Btn_Convert_ClickAsync(object sender, EventArgs e)
+        {
+            Btn_Convert.Enabled = false;
+            txt_DicuserMessage.Clear();
+            string DicFillepath = txt_dicfiles.Text.Trim() ?? "";
+            Properties.Settings.Default.txt_dicfiles = DicFillepath;
+            Properties.Settings.Default.Save();
+            string OutPutFillepath = txt_OutFilePath.Text.Trim() ?? "";
+            Properties.Settings.Default.txt_OutFilePath = OutPutFillepath;
+            Properties.Settings.Default.Save();
+
+            try
+            {
+                string inputFilePath = txt_dicfiles.Text?.Trim();
+                string outputFolderPath = txt_OutFilePath.Text?.Trim();
+
+                AppendLog("===== DICTIONARY PROCESS START =====");
+
+                // Validation
+                if (string.IsNullOrWhiteSpace(inputFilePath) || !File.Exists(inputFilePath))
+                {
+                    AppendLog("❌ Error: Invalid dictionary file path.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(outputFolderPath))
+                {
+                    AppendLog("❌ Error: Output folder not selected.");
+                    return;
+                }
+
+                if (!Directory.Exists(outputFolderPath))
+                {
+                    Directory.CreateDirectory(outputFolderPath);
+                    AppendLog("📁 Output folder created.");
+                }
+
+                AppendLog($"📄 Input File  : {inputFilePath}");
+                AppendLog($"📂 Output Path : {outputFolderPath}");
+                AppendLog("");
+
+                var service = new DictionaryProcessService(AppendLog);
+
+                AppendLog("🔄 Processing dictionary file...");
+
+                DictionaryProcessResult result = await Task.Run(() =>
+                    service.ProcessDictionaryFile(inputFilePath, outputFolderPath));
+
+                AppendLog("");
+                AppendLog("===== PROCESS SUMMARY =====");
+                AppendLog($"Total Rows          : {result.TotalRows}");
+                AppendLog($"Valid Rows          : {result.ValidRows}");
+                AppendLog($"Invalid Rows        : {result.InvalidRows}");
+                AppendLog($"Duplicate Groups    : {result.DuplicateGroups}");
+                AppendLog($"Conflict Duplicates : {result.ConflictDuplicates}");
+                AppendLog("");
+                AppendLog($"📄 Log File         : {result.LogFilePath}");
+                AppendLog($"📄 Clean Excel File : {result.CleanedExcelPath}");
+                AppendLog($"📄 XML File         : {result.XmlFilePath}");
+                AppendLog("");
+                AppendLog("✅ Process completed successfully.");
+            }
+            catch (Exception ex)
+            {
+                AppendLog("❌ SYSTEM ERROR: " + ex.Message);
+            }
+            finally
+            {
+                Btn_Convert.Enabled = true;
+            }
+            //try
+            //{
+            //    Btn_Convert.Enabled = false;
+            //    txt_DicuserMessage.Clear();
+
+            //    string inputFilePath = txt_dicfiles.Text?.Trim();
+            //    string outputFolderPath = txt_OutFilePath.Text?.Trim();
+
+            //    if (string.IsNullOrWhiteSpace(inputFilePath) || !File.Exists(inputFilePath))
+            //    {
+            //        MessageBox.Show("Please select a valid dictionary Excel file.");
+            //        return;
+            //    }
+
+            //    if (string.IsNullOrWhiteSpace(outputFolderPath))
+            //    {
+            //        MessageBox.Show("Please select a valid output folder.");
+            //        return;
+            //    }
+
+            //    if (!Directory.Exists(outputFolderPath))
+            //    {
+            //        Directory.CreateDirectory(outputFolderPath);
+            //    }
+
+            //    AppendLog("Dictionary process started...");
+            //    AppendLog($"Input File : {inputFilePath}");
+            //    AppendLog($"Output Path: {outputFolderPath}");
+            //    AppendLog("");
+
+            //    var service = new DictionaryProcessService(AppendLog);
+
+            //    DictionaryProcessResult result = await Task.Run(() =>
+            //        service.ProcessDictionaryFile(inputFilePath, outputFolderPath));
+
+            //    AppendLog("");
+            //    AppendLog("===== FINAL SUMMARY =====");
+            //    AppendLog($"Total Rows          : {result.TotalRows}");
+            //    AppendLog($"Valid Rows          : {result.ValidRows}");
+            //    AppendLog($"Invalid Rows        : {result.InvalidRows}");
+            //    AppendLog($"Duplicate Groups    : {result.DuplicateGroups}");
+            //    AppendLog($"Conflict Duplicates : {result.ConflictDuplicates}");
+            //    AppendLog($"Log File            : {result.LogFilePath}");
+            //    AppendLog($"Clean Excel File    : {result.CleanedExcelPath}");
+            //    AppendLog($"XML File            : {result.XmlFilePath}");
+            //    AppendLog("Process completed successfully.");
+
+            //    MessageBox.Show("Dictionary file processed successfully.");
+            //}
+            //catch (Exception ex)
+            //{
+            //    AppendLog("ERROR: " + ex.Message);
+            //    MessageBox.Show("Error: " + ex.Message);
+            //}
+            //finally
+            //{
+            //    Btn_Convert.Enabled = true;
+            //}
+
+        }
+
+        private void AppendLog(string message)
+        {
+            if (txt_DicuserMessage.InvokeRequired)
+            {
+                txt_DicuserMessage.Invoke(new Action(() => AppendLog(message)));
+                return;
+            }
+
+            txt_DicuserMessage.AppendText($"{DateTime.Now:HH:mm:ss} - {message}{Environment.NewLine}");
+            txt_DicuserMessage.SelectionStart = txt_DicuserMessage.Text.Length;
+            txt_DicuserMessage.ScrollToCaret();
+            Application.DoEvents();
+        }
+
+        //private void AppendLog(string message)
+        //{
+        //    if (txt_DicuserMessage.InvokeRequired)
+        //    {
+        //        txt_DicuserMessage.Invoke(new Action(() => AppendLog(message)));
+        //        return;
+        //    }
+
+        //    txt_DicuserMessage.AppendText(message + Environment.NewLine);
+        //    txt_DicuserMessage.SelectionStart = txt_DicuserMessage.Text.Length;
+        //    txt_DicuserMessage.ScrollToCaret();
+        //    Application.DoEvents();
+        //}
+    }
+}
