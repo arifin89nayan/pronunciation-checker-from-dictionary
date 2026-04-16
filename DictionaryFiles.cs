@@ -54,17 +54,22 @@ namespace WindowsFormsApp1
         {
             try
             {
-                string extension = Path.GetExtension(sourceFilePath); // .xlsx
-                string backupFilePath = Path.Combine(folderPath, "dic-original" + extension);
+                string fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourceFilePath);
+                string extension = Path.GetExtension(sourceFilePath);
 
-                // If already exists → overwrite
+                // 👉 Add "_original"
+                string backupFileName = fileNameWithoutExt + "_original" + extension;
+
+                string backupFilePath = Path.Combine(folderPath, backupFileName);
+
                 File.Copy(sourceFilePath, backupFilePath, true);
 
-               
+
+
             }
             catch (Exception ex)
             {
-                AppendLog("❌ Backup creation failed: " + ex.Message);
+                AppendLog("Excel Original creation failed: " + ex.Message);
             }
         }
 
