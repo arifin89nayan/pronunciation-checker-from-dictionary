@@ -50,25 +50,7 @@ namespace WindowsFormsApp1.Helper
                     "http://www.w3.org/2005/01/pronunciation-lexicon http://www.w3.org/TR/2007/CR-pronunciation-lexicon-20071212/pls.xsd")
             );
 
-            // Load the Excel
-            //using (var workbook = new XLWorkbook(excelPath))
-            //{
-            //    var worksheet = workbook.Worksheet(1); // Sheet 1
-            //    foreach (var row in worksheet.RangeUsed().RowsUsed().Skip(1))
-            //    {
-            //        string grapheme = row.Cell(1).GetString().Trim();
-            //        string phoneme = row.Cell(2).GetString().Trim();
-
-            //        if (!string.IsNullOrWhiteSpace(grapheme) && !string.IsNullOrWhiteSpace(phoneme))
-            //        {
-            //            var lexeme = new XElement(ns + "lexeme",
-            //                new XElement(ns + "grapheme", grapheme),
-            //                new XElement(ns + "phoneme", phoneme)
-            //            );
-            //            lexicon.Add(lexeme);
-            //        }
-            //    }
-            //}
+            
             var seenGraphemes = new HashSet<string>(StringComparer.Ordinal);
 
             using (var workbook = new XLWorkbook(excelPath))
@@ -113,24 +95,7 @@ namespace WindowsFormsApp1.Helper
         {
             return string.IsNullOrEmpty(s) ? string.Empty : s.Trim();
         }
-        //public async Task<bool> GeneratePronouceTextToSpeechAsync(string inputText, TextValue lanAndVoice)
-        //{
-        //    try
-        //    {
-        //        string lang = lanAndVoice.language;
-        //        string voice = lanAndVoice.voice;
-
-        //        // Directly call the default text-to-speech method
-        //        await SynthesizeAudioAsyncV2(key, region, inputText, lang, voice, _outputFilePath);
-
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        ErrorLogger.LogError($"Audio generation error: {ex.Message}");
-        //        return false;
-        //    }
-        //}
+        
         public async Task<bool> GenerateTextToSpeechAsync(string inputText,TextValue lanAndVoice)
         {
             try

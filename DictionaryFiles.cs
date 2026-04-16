@@ -142,17 +142,16 @@ namespace WindowsFormsApp1
 
                 AppendLog("");
                 AppendLog("===== PROCESS SUMMARY =====");
-                AppendLog($"Total Rows          : {result.TotalRows}");
-                AppendLog($"Valid Rows          : {result.ValidRows}");
-                AppendLog($"Invalid Rows        : {result.InvalidRows}");
-                AppendLog($"Duplicate Groups    : {result.DuplicateGroups}");
-                AppendLog($"Conflict Duplicates : {result.ConflictDuplicates}");
-                AppendLog("");
-                AppendLog($"📄 Log File         : {result.LogFilePath}");
-                AppendLog($"📄 Clean Excel File : {result.CleanedExcelPath}");
-                AppendLog($"📄 XML File         : {result.XmlFilePath}");
-                AppendLog("");
-                AppendLog("✅ Process completed successfully.");
+                AppendLog($"Total Rows            : {result.TotalRows}");
+                AppendLog($"Valid Rows            : {result.ValidRows}");
+                AppendLog($"Invalid Rows          : {result.InvalidRows}");
+                AppendLog($"Removed Duplicates    : {result.RemovedDuplicateRows}");
+                AppendLog($"Removed Containment   : {result.RemovedContainmentRows}");
+                AppendLog($"Final Clean Rows      : {result.FinalRows}");
+                AppendLog($"Log File              : {result.LogFilePath}");
+                AppendLog($"Clean Excel File      : {result.CleanedExcelPath}");
+                AppendLog($"XML File              : {result.XmlFilePath}");
+                AppendLog("===== PROCESS COMPLETED SUCCESSFULLY =====");
             }
             catch (Exception ex)
             {
