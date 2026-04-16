@@ -1,0 +1,402 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\SixLabors.ImageSharp.3.1.10\build\SixLabors.ImageSharp.props" Condition="Exists('packages\SixLabors.ImageSharp.3.1.10\build\SixLabors.ImageSharp.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0EB54C6C-7723-49F1-A8BA-1FE5869F0067}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>WindowsFormsApp1</RootNamespace>
+    <AssemblyName>WindowsFormsApp1</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Aspose.Slides, Version=25.6.0.0, Culture=neutral, PublicKeyToken=716fcc553a201e56, processorArchitecture=MSIL">
+      <HintPath>packages\Aspose.Slides.NET.25.6.0\lib\net4.0-client\Aspose.Slides.dll</HintPath>
+    </Reference>
+    <Reference Include="Azure.Core, Version=1.44.1.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
+      <HintPath>packages\Azure.Core.1.44.1\lib\net472\Azure.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="ClosedXML, Version=0.104.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\ClosedXML.0.104.2\lib\netstandard2.0\ClosedXML.dll</HintPath>
+    </Reference>
+    <Reference Include="ClosedXML.Parser, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1d5f7376574c51ec, processorArchitecture=MSIL">
+      <HintPath>packages\ClosedXML.Parser.1.2.0\lib\netstandard2.0\ClosedXML.Parser.dll</HintPath>
+    </Reference>
+    <Reference Include="CsvHelper, Version=33.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
+      <HintPath>packages\CsvHelper.33.0.1\lib\net48\CsvHelper.dll</HintPath>
+    </Reference>
+    <Reference Include="DocumentFormat.OpenXml, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>packages\DocumentFormat.OpenXml.3.1.1\lib\net46\DocumentFormat.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="DocumentFormat.OpenXml.Framework, Version=3.1.1.0, Culture=neutral, PublicKeyToken=8fb06cb64d019a17, processorArchitecture=MSIL">
+      <HintPath>packages\DocumentFormat.OpenXml.Framework.3.1.1\lib\net46\DocumentFormat.OpenXml.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelNumberFormat, Version=1.1.0.0, Culture=neutral, PublicKeyToken=23c6f5d73be07eca, processorArchitecture=MSIL">
+      <HintPath>packages\ExcelNumberFormat.1.1.0\lib\net20\ExcelNumberFormat.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.8.0.0\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Bcl.HashCode.1.1.1\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CognitiveServices.Speech.csharp, Version=1.43.0.28, Culture=neutral, PublicKeyToken=d2e6dcccb609e663, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.CognitiveServices.Speech.1.43.0\lib\net462\Microsoft.CognitiveServices.Speech.csharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Win32.Registry, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Win32.Registry.4.7.0\lib\net461\Microsoft.Win32.Registry.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>packages\NAudio.2.2.1\lib\net472\NAudio.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Asio, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>packages\NAudio.Asio.2.2.1\lib\netstandard2.0\NAudio.Asio.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Core, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>packages\NAudio.Core.2.2.1\lib\netstandard2.0\NAudio.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Midi, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>packages\NAudio.Midi.2.2.1\lib\netstandard2.0\NAudio.Midi.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.Wasapi, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>packages\NAudio.Wasapi.2.2.1\lib\netstandard2.0\NAudio.Wasapi.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.WinForms, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>packages\NAudio.WinForms.2.2.1\lib\net472\NAudio.WinForms.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio.WinMM, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
+      <HintPath>packages\NAudio.WinMM.2.2.1\lib\netstandard2.0\NAudio.WinMM.dll</HintPath>
+    </Reference>
+    <Reference Include="office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="RBush, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\RBush.4.0.0\lib\net47\RBush.dll</HintPath>
+    </Reference>
+    <Reference Include="SixLabors.Fonts, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d998eea7b14cab13, processorArchitecture=MSIL">
+      <HintPath>packages\SixLabors.Fonts.1.0.0\lib\netstandard2.0\SixLabors.Fonts.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ClientModel, Version=1.1.0.0, Culture=neutral, PublicKeyToken=92742159e12e44c8, processorArchitecture=MSIL">
+      <HintPath>packages\System.ClientModel.1.1.0\lib\netstandard2.0\System.ClientModel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=6.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Diagnostics.DiagnosticSource.6.0.1\lib\net461\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory.Data, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Memory.Data.6.0.0\lib\net461\System.Memory.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.AccessControl, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Security.AccessControl.4.7.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal.Windows, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Security.Principal.Windows.4.7.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Text.Encodings.Web.6.0.0\lib\net461\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=6.0.0.10, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Text.Json.6.0.10\lib\net461\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AudioSetup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AudioSetup.Designer.cs">
+      <DependentUpon>AudioSetup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AutoConverter.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AutoConverter.Designer.cs">
+      <DependentUpon>AutoConverter.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CaptionSetup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CaptionSetup.Designer.cs">
+      <DependentUpon>CaptionSetup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ChatGptAPI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ChatGptAPI.Designer.cs">
+      <DependentUpon>ChatGptAPI.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DictionaryFiles.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DictionaryFiles.Designer.cs">
+      <DependentUpon>DictionaryFiles.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Enums\AudioInfo.cs" />
+    <Compile Include="Enums\LineTypeEnum.cs" />
+    <Compile Include="Enums\WidgetTypeEnum.cs" />
+    <Compile Include="Enums\WigetConfig.cs" />
+    <Compile Include="Exceptions\InvalidPlayConfigException.cs" />
+    <Compile Include="Exceptions\InvalidWidgetTypeException.cs" />
+    <Compile Include="Exceptions\UnprocessableLineException.cs" />
+    <Compile Include="Global\GlobalConfigPropreties.cs" />
+    <Compile Include="Global\GlobalProperties.cs" />
+    <Compile Include="Helper\Mapper\Template2CsvFileParserMapper.cs" />
+    <Compile Include="Helper\Mapper\WidgetCsvFileParserMapper.cs" />
+    <Compile Include="Helper\PatternHelper.cs" />
+    <Compile Include="Helper\PhonemeLexiconHelper.cs" />
+    <Compile Include="Models\Animation\AnimationLineExtract.cs" />
+    <Compile Include="Models\AutoConverters\LanguageParsedModel.cs" />
+    <Compile Include="Models\AutoConverters\QuizParserModel.cs" />
+    <Compile Include="Models\AutoConverters\WidgetParsedCommonModel.cs" />
+    <Compile Include="Models\AutoConverters\GuideParsedModel.cs" />
+    <Compile Include="Models\DictionaryProcessResult.cs" />
+    <Compile Include="Models\DictionaryRowModel.cs" />
+    <Compile Include="Models\DuplicateGroupModel.cs" />
+    <Compile Include="Models\ParseSelectionMetadata.cs" />
+    <Compile Include="Models\Widgets\WidgetContainer.cs" />
+    <Compile Include="NewStartingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="NewStartingForm.Designer.cs">
+      <DependentUpon>NewStartingForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PPT\Application.cs" />
+    <Compile Include="QuizAutoProcess.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="QuizAutoProcess.Designer.cs">
+      <DependentUpon>QuizAutoProcess.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Services\Abstraction\IAutoWidgetProcessor.cs" />
+    <Compile Include="Services\Abstraction\IWidgetFileParserQuiz.cs" />
+    <Compile Include="Services\Abstraction\IWidgetFileParser.cs" />
+    <Compile Include="Services\AnimationWidgetProcessor.cs" />
+    <Compile Include="Services\CaptionFormService.cs" />
+    <Compile Include="Services\CaptionWidgetProcessor.cs" />
+    <Compile Include="Services\ContentNameGeneratorService.cs" />
+    <Compile Include="Services\AutoConfigGeneratorParserFactory.cs" />
+    <Compile Include="Services\DictionaryProcessService.cs" />
+    <Compile Include="Services\ErrorLogger.cs" />
+    <Compile Include="Services\FileService.cs" />
+    <Compile Include="Services\FormService.cs" />
+    <Compile Include="Services\GuideExcelFileParser.cs" />
+    <Compile Include="Services\LanguageExcelParser.cs" />
+    <Compile Include="Services\QuizExcelFileParser.cs" />
+    <Compile Include="Services\QuizWidgetProcessor.cs" />
+    <Compile Include="Services\QuizCsvFileParser.cs" />
+    <Compile Include="Services\GuideCsvFileParser.cs" />
+    <Compile Include="Services\TextFormService.cs" />
+    <Compile Include="StartupForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="StartupForm.Designer.cs">
+      <DependentUpon>StartupForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AnimationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AnimationForm.Designer.cs">
+      <DependentUpon>AnimationForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CaptionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CaptionForm.Designer.cs">
+      <DependentUpon>CaptionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form4.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form4.Designer.cs">
+      <DependentUpon>Form4.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Helper\Config.cs" />
+    <Compile Include="Helper\ConfigBuilder.cs" />
+    <Compile Include="Helper\ConfigGenarationHelper.cs" />
+    <Compile Include="Helper\ConfigGenerator.cs" />
+    <Compile Include="Helper\ConfigSecondPartBuilder.cs" />
+    <Compile Include="Helper\DirectoryHelper.cs" />
+    <Compile Include="Helper\FormNavigetor.cs" />
+    <Compile Include="Helper\GlobalVariables.cs" />
+    <Compile Include="Helper\ImageExtrator.cs" />
+    <Compile Include="Helper\ImageService.cs" />
+    <Compile Include="Helper\Quiz\CorrectAnsConfigBuilder.cs" />
+    <Compile Include="Helper\Quiz\CsvGenerator.cs" />
+    <Compile Include="Helper\Quiz\QuestionConfgBuilder.cs" />
+    <Compile Include="Helper\Quiz\QuizConfigBuilder.cs" />
+    <Compile Include="Helper\Quiz\QuizConfigBuilderV2.cs" />
+    <Compile Include="Helper\TextConverterService.cs" />
+    <Compile Include="Helper\TextExtrator.cs" />
+    <Compile Include="Helper\TxtToImage.cs" />
+    <Compile Include="Models\Widgets\AnimationWidget.cs" />
+    <Compile Include="Models\Widgets\CaptionWidget.cs" />
+    <Compile Include="Models\Widgets\SelectionWidget.cs" />
+    <Compile Include="Models\Widgets\TextWidget.cs" />
+    <Compile Include="Models\Widgets\Widget.cs" />
+    <Compile Include="Models\Quiz.cs" />
+    <Compile Include="Models\QuizCSVRecord.cs" />
+    <Compile Include="Models\TextData.cs" />
+    <Compile Include="Models\TextValue.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SelectionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SelectionForm.Designer.cs">
+      <DependentUpon>SelectionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="QuizForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="QuizForm.Designer.cs">
+      <DependentUpon>QuizForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Services\PlayConfigAnalyzerService.cs" />
+    <Compile Include="Services\QuizService.cs" />
+    <Compile Include="Global\QuizProperties.cs" />
+    <Compile Include="Template\PlayConfigTemplate.cs" />
+    <Compile Include="Template\QuizPlayConfigTemplate.cs" />
+    <Compile Include="Template\QuizPlayConfigTemplateV2.cs" />
+    <EmbeddedResource Include="AudioSetup.resx">
+      <DependentUpon>AudioSetup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AutoConverter.resx">
+      <DependentUpon>AutoConverter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CaptionSetup.resx">
+      <DependentUpon>CaptionSetup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ChatGptAPI.resx">
+      <DependentUpon>ChatGptAPI.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DictionaryFiles.resx">
+      <DependentUpon>DictionaryFiles.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NewStartingForm.resx">
+      <DependentUpon>NewStartingForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QuizAutoProcess.resx">
+      <DependentUpon>QuizAutoProcess.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="StartupForm.resx">
+      <DependentUpon>StartupForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AnimationForm.resx">
+      <DependentUpon>AnimationForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CaptionForm.resx">
+      <DependentUpon>CaptionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form4.resx">
+      <DependentUpon>Form4.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="SelectionForm.resx">
+      <DependentUpon>SelectionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QuizForm.resx">
+      <DependentUpon>QuizForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Images\541B.JPG" />
+    <Content Include="Images\6DC3.JPG" />
+    <Content Include="Images\7571.JPG" />
+    <Content Include="Output\chunk_0.png" />
+    <Content Include="Output\chunk_1.png" />
+    <Content Include="Output\output.jpg" />
+    <Content Include="Output\output.wav" />
+    <Content Include="Resources\Audio\000001F14.WMA" />
+    <Content Include="Resources\Audio\output.wav" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="packages\Microsoft.CognitiveServices.Speech.1.43.0\build\net462\Microsoft.CognitiveServices.Speech.targets" Condition="Exists('packages\Microsoft.CognitiveServices.Speech.1.43.0\build\net462\Microsoft.CognitiveServices.Speech.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Microsoft.CognitiveServices.Speech.1.43.0\build\net462\Microsoft.CognitiveServices.Speech.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.CognitiveServices.Speech.1.43.0\build\net462\Microsoft.CognitiveServices.Speech.targets'))" />
+    <Error Condition="!Exists('packages\SixLabors.ImageSharp.3.1.10\build\SixLabors.ImageSharp.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\SixLabors.ImageSharp.3.1.10\build\SixLabors.ImageSharp.props'))" />
+  </Target>
+</Project>
