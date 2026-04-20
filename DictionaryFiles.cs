@@ -151,7 +151,7 @@ namespace WindowsFormsApp1
                 AppendLog($"Log File              : {result.LogFilePath}");
                 AppendLog($"Clean Excel File      : {result.CleanedExcelPath}");
                 AppendLog($"XML File              : {result.XmlFilePath}");
-                AppendLog("===== PROCESS COMPLETED SUCCESSFULLY =====");
+                AppendLog("Process completed successfully.");
             }
             catch (Exception ex)
             {
@@ -161,64 +161,7 @@ namespace WindowsFormsApp1
             {
                 Btn_Convert.Enabled = true;
             }
-            //try
-            //{
-            //    Btn_Convert.Enabled = false;
-            //    txt_DicuserMessage.Clear();
-
-            //    string inputFilePath = txt_dicfiles.Text?.Trim();
-            //    string outputFolderPath = txt_OutFilePath.Text?.Trim();
-
-            //    if (string.IsNullOrWhiteSpace(inputFilePath) || !File.Exists(inputFilePath))
-            //    {
-            //        MessageBox.Show("Please select a valid dictionary Excel file.");
-            //        return;
-            //    }
-
-            //    if (string.IsNullOrWhiteSpace(outputFolderPath))
-            //    {
-            //        MessageBox.Show("Please select a valid output folder.");
-            //        return;
-            //    }
-
-            //    if (!Directory.Exists(outputFolderPath))
-            //    {
-            //        Directory.CreateDirectory(outputFolderPath);
-            //    }
-
-            //    AppendLog("Dictionary process started...");
-            //    AppendLog($"Input File : {inputFilePath}");
-            //    AppendLog($"Output Path: {outputFolderPath}");
-            //    AppendLog("");
-
-            //    var service = new DictionaryProcessService(AppendLog);
-
-            //    DictionaryProcessResult result = await Task.Run(() =>
-            //        service.ProcessDictionaryFile(inputFilePath, outputFolderPath));
-
-            //    AppendLog("");
-            //    AppendLog("===== FINAL SUMMARY =====");
-            //    AppendLog($"Total Rows          : {result.TotalRows}");
-            //    AppendLog($"Valid Rows          : {result.ValidRows}");
-            //    AppendLog($"Invalid Rows        : {result.InvalidRows}");
-            //    AppendLog($"Duplicate Groups    : {result.DuplicateGroups}");
-            //    AppendLog($"Conflict Duplicates : {result.ConflictDuplicates}");
-            //    AppendLog($"Log File            : {result.LogFilePath}");
-            //    AppendLog($"Clean Excel File    : {result.CleanedExcelPath}");
-            //    AppendLog($"XML File            : {result.XmlFilePath}");
-            //    AppendLog("Process completed successfully.");
-
-            //    MessageBox.Show("Dictionary file processed successfully.");
-            //}
-            //catch (Exception ex)
-            //{
-            //    AppendLog("ERROR: " + ex.Message);
-            //    MessageBox.Show("Error: " + ex.Message);
-            //}
-            //finally
-            //{
-            //    Btn_Convert.Enabled = true;
-            //}
+            
 
         }
 
@@ -230,24 +173,11 @@ namespace WindowsFormsApp1
                 return;
             }
 
-            txt_DicuserMessage.AppendText($"{DateTime.Now:HH:mm:ss} - {message}{Environment.NewLine}");
+            txt_DicuserMessage.AppendText(message + Environment.NewLine);
             txt_DicuserMessage.SelectionStart = txt_DicuserMessage.Text.Length;
             txt_DicuserMessage.ScrollToCaret();
             Application.DoEvents();
         }
 
-        //private void AppendLog(string message)
-        //{
-        //    if (txt_DicuserMessage.InvokeRequired)
-        //    {
-        //        txt_DicuserMessage.Invoke(new Action(() => AppendLog(message)));
-        //        return;
-        //    }
-
-        //    txt_DicuserMessage.AppendText(message + Environment.NewLine);
-        //    txt_DicuserMessage.SelectionStart = txt_DicuserMessage.Text.Length;
-        //    txt_DicuserMessage.ScrollToCaret();
-        //    Application.DoEvents();
-        //}
     }
 }

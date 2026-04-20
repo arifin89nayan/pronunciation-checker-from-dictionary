@@ -12,10 +12,22 @@ namespace WindowsFormsApp1.Services
     public class DictionaryProcessService
     {
         private readonly Action<string> _log;
+        private readonly List<string> _logLines = new List<string>();
 
         public DictionaryProcessService(Action<string> logger)
         {
             _log = logger;
+        }
+
+        private void WriteLog(string message, bool saveToFile = true)
+        {
+            string line = $"{DateTime.Now:HH:mm:ss} - {message}";
+            _log?.Invoke(line);
+
+            if (saveToFile)
+            {
+                _logLines.Add(line);
+            }
         }
 
         public DictionaryProcessResult ProcessDictionaryFile(string inputFilePath, string outputFolderPath)
@@ -24,62 +36,65 @@ namespace WindowsFormsApp1.Services
 
             string fileNameWithoutExt = Path.GetFileNameWithoutExtension(inputFilePath);
             string cleanedExcelPath = Path.Combine(outputFolderPath, fileNameWithoutExt + "Modified.xlsx");
-            string xmlFilePath = Path.Combine(outputFolderPath, fileNameWithoutExt + "Modified.xml");
             string logFilePath = Path.Combine(outputFolderPath, fileNameWithoutExt + ".log");
+            string xmlFilePath = Path.Combine(outputFolderPath, fileNameWithoutExt + "Modified.xml");
 
-            _log("READ Excel...");
+            // Read
+            WriteLog("READ Excel...");
             var rows = ReadDictionaryRows(inputFilePath);
             result.TotalRows = rows.Count;
-            _log($"Total rows loaded: {rows.Count}");
-            _log("");
+            WriteLog($"Total rows loaded: {rows.Count}");
+            WriteLog("");
 
-            _log("VALIDATE...");
-            ValidateRows(rows);
-            result.InvalidRows = rows.Count(r => r.Status.StartsWith("Invalid"));
-            result.ValidRows = rows.Count(r => r.Status == "Valid");
-            _log($"Valid rows: {result.ValidRows}");
-            _log($"Invalid rows: {result.InvalidRows}");
-            _log("");
+            // Validate
+            WriteLog("VALIDATE...");
+            ValidateRows(rows, result);
+            WriteLog($"Valid rows: {result.ValidRows}");
+            WriteLog($"Invalid rows: {result.InvalidRows}");
+            WriteLog("");
 
-            _log("REMOVE DUPLICATES...");
-            RemoveDuplicates(rows);
-            result.RemovedDuplicateRows = rows.Count(r => r.IsRemoved && r.RemovedReason == "Duplicate");
-            _log($"Removed duplicate rows: {result.RemovedDuplicateRows}");
-            _log("");
+            // Remove duplicates
+            WriteLog("REMOVE DUPLICATES...");
+            RemoveDuplicates(rows, result);
+            WriteLog($"Removed duplicate rows: {result.RemovedDuplicateRows}");
+            WriteLog("");
 
-            _log("REMOVE CONTAINMENT SHORT WORDS...");
-            RemoveContainmentShortWords(rows);
-            result.RemovedContainmentRows = rows.Count(r => r.IsRemoved && r.RemovedReason == "Containment");
-            _log($"Removed containment rows: {result.RemovedContainmentRows}");
-            _log("");
+            // Remove containment short words
+            WriteLog("REMOVE CONTAINMENT SHORT WORDS...");
+            RemoveContainmentShortWords(rows, result);
+            WriteLog($"Removed containment rows: {result.RemovedContainmentRows}");
+            WriteLog("");
 
+            // Final clean rows
             var finalRows = rows
                 .Where(r => r.Status == "Valid" && !r.IsRemoved)
                 .OrderBy(r => r.RowNumber)
                 .ToList();
 
             result.FinalRows = finalRows.Count;
-            _log($"Final clean rows: {result.FinalRows}");
-            _log("");
+            WriteLog($"Final clean rows: {result.FinalRows}");
+            WriteLog("");
 
-            _log("SAVE cleaned Excel...");
+            // Save cleaned Excel
+            WriteLog("SAVE cleaned Excel...");
             SaveCleanedExcelFromList(cleanedExcelPath, finalRows);
-            _log("Cleaned Excel saved: " + cleanedExcelPath);
-            _log("");
+            WriteLog($"Cleaned Excel saved: {cleanedExcelPath}");
+            WriteLog("");
 
-            _log("GENERATE XML from final clean list...");
+            // Generate XML from clean list
+            WriteLog("GENERATE XML...");
             GenerateLexiconXmlFromList(finalRows, xmlFilePath);
-            _log("XML file saved: " + xmlFilePath);
-            _log("");
+            WriteLog($"XML file saved: {xmlFilePath}");
+            WriteLog("");
 
-            _log("SAVE Log file...");
-            SaveLogFile(logFilePath, rows, result);
-            _log("Log file saved: " + logFilePath);
-            _log("");
+            // Save log
+            WriteLog("SAVE Log file...", saveToFile: false);
+            SaveLogFile(logFilePath);
+            WriteLog($"Log file saved: {logFilePath}", saveToFile: false);
 
+            result.LogFilePath = logFilePath;
             result.CleanedExcelPath = cleanedExcelPath;
             result.XmlFilePath = xmlFilePath;
-            result.LogFilePath = logFilePath;
 
             return result;
         }
@@ -98,24 +113,23 @@ namespace WindowsFormsApp1.Services
 
                 foreach (var row in usedRows.Skip(1))
                 {
-                    var model = new DictionaryRowModel
+                    rows.Add(new DictionaryRowModel
                     {
                         RowNumber = row.RowNumber(),
                         SerialNo = row.Cell(1).GetString()?.Trim(),   // Column A
                         Word = row.Cell(2).GetString()?.Trim(),       // Column B
                         Phoneme = row.Cell(3).GetString()?.Trim(),    // Column C
-                        Status = "Read"
-                    };
-
-                    rows.Add(model);
-                    _log($"Loaded Row {model.RowNumber}: Word='{model.Word}', Phoneme='{model.Phoneme}'");
+                        Status = "Read",
+                        IsRemoved = false,
+                        RemovedReason = ""
+                    });
                 }
             }
 
             return rows;
         }
 
-        private void ValidateRows(List<DictionaryRowModel> rows)
+        private void ValidateRows(List<DictionaryRowModel> rows, DictionaryProcessResult result)
         {
             foreach (var row in rows)
             {
@@ -125,23 +139,23 @@ namespace WindowsFormsApp1.Services
                 if (string.IsNullOrWhiteSpace(row.Word))
                 {
                     row.Status = "Invalid - Word empty";
-                    _log($"Row {row.RowNumber}: skipped, Word empty");
+                    result.InvalidRows++;
                     continue;
                 }
 
                 if (string.IsNullOrWhiteSpace(row.Phoneme))
                 {
                     row.Status = "Invalid - Phoneme empty";
-                    _log($"Row {row.RowNumber}: skipped, Phoneme empty");
+                    result.InvalidRows++;
                     continue;
                 }
 
                 row.Status = "Valid";
-                _log($"Row {row.RowNumber}: valid");
+                result.ValidRows++;
             }
         }
 
-        private void RemoveDuplicates(List<DictionaryRowModel> rows)
+        private void RemoveDuplicates(List<DictionaryRowModel> rows, DictionaryProcessResult result)
         {
             var validRows = rows
                 .Where(r => r.Status == "Valid")
@@ -161,13 +175,14 @@ namespace WindowsFormsApp1.Services
                 row.IsRemoved = true;
                 row.RemovedReason = "Duplicate";
                 row.Status = "Removed - Duplicate";
+                result.RemovedDuplicateRows++;
 
                 var firstRow = firstSeen[row.Word];
-                _log($"Duplicate found: Word='{row.Word}' at row {row.RowNumber}. Kept first row {firstRow.RowNumber}, removed row {row.RowNumber}");
+                WriteLog($"Duplicate found: Word='{row.Word}' at row {row.RowNumber}. Kept first row {firstRow.RowNumber}, removed row {row.RowNumber}");
             }
         }
 
-        private void RemoveContainmentShortWords(List<DictionaryRowModel> rows)
+        private void RemoveContainmentShortWords(List<DictionaryRowModel> rows, DictionaryProcessResult result)
         {
             var candidates = rows
                 .Where(r => r.Status == "Valid" && !r.IsRemoved)
@@ -194,15 +209,15 @@ namespace WindowsFormsApp1.Services
                     if (string.Equals(shortRow.Word, longRow.Word, StringComparison.OrdinalIgnoreCase))
                         continue;
 
-                    // remove short word if it is contained in a longer word
                     if (shortRow.Word.Length < longRow.Word.Length &&
                         longRow.Word.IndexOf(shortRow.Word, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         shortRow.IsRemoved = true;
                         shortRow.RemovedReason = "Containment";
                         shortRow.Status = "Removed - Containment";
+                        result.RemovedContainmentRows++;
 
-                        _log($"Containment found: short word '{shortRow.Word}' at row {shortRow.RowNumber} is contained in longer word '{longRow.Word}' at row {longRow.RowNumber}. Removed row {shortRow.RowNumber}");
+                        WriteLog($"Containment found: short word '{shortRow.Word}' at row {shortRow.RowNumber} is contained in longer word '{longRow.Word}' at row {longRow.RowNumber}. Removed row {shortRow.RowNumber}");
                         break;
                     }
                 }
@@ -263,29 +278,9 @@ namespace WindowsFormsApp1.Services
             doc.Save(outputXmlPath);
         }
 
-        private void SaveLogFile(string logPath, List<DictionaryRowModel> rows, DictionaryProcessResult result)
+        private void SaveLogFile(string logPath)
         {
-            var sb = new StringBuilder();
-
-            sb.AppendLine("Dictionary Processing Log");
-            sb.AppendLine("Generated Time: " + DateTime.Now);
-            sb.AppendLine("======================================");
-            sb.AppendLine($"Total Rows                : {result.TotalRows}");
-            sb.AppendLine($"Valid Rows                : {result.ValidRows}");
-            sb.AppendLine($"Invalid Rows              : {result.InvalidRows}");
-            sb.AppendLine($"Removed Duplicate Rows    : {result.RemovedDuplicateRows}");
-            sb.AppendLine($"Removed Containment Rows  : {result.RemovedContainmentRows}");
-            sb.AppendLine($"Final Rows                : {result.FinalRows}");
-            sb.AppendLine("======================================");
-            sb.AppendLine();
-
-            foreach (var row in rows.OrderBy(r => r.RowNumber))
-            {
-                sb.AppendLine(
-                    $"Row {row.RowNumber}: Serial='{row.SerialNo}', Word='{row.Word}', Phoneme='{row.Phoneme}', Status='{row.Status}'");
-            }
-
-            File.WriteAllText(logPath, sb.ToString(), Encoding.UTF8);
+            File.WriteAllLines(logPath, _logLines, Encoding.UTF8);
         }
 
         private string NormalizeKey(string value)

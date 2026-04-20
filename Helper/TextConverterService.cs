@@ -35,66 +35,66 @@ namespace WindowsFormsApp1.Helper
         {
             _outputFilePath = outputFilePath;
         }
-        public static string GenerateLexiconFromExcel(string excelPath, string outputXmlPath)
-        {
-            // Set the PLS namespace
-            XNamespace ns = "http://www.w3.org/2005/01/pronunciation-lexicon";
+        //public static string GenerateLexiconFromExcel(string excelPath, string outputXmlPath)
+        //{
+        //    // Set the PLS namespace
+        //    XNamespace ns = "http://www.w3.org/2005/01/pronunciation-lexicon";
 
-            // Create the root element
-            var lexicon = new XElement(ns + "lexicon",
-                new XAttribute("version", "1.0"),
-                new XAttribute("alphabet", "sapi"),
-                new XAttribute(XNamespace.Xml + "lang", "ja-JP"),
-                new XAttribute(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance"),
-                new XAttribute(XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance") + "schemaLocation",
-                    "http://www.w3.org/2005/01/pronunciation-lexicon http://www.w3.org/TR/2007/CR-pronunciation-lexicon-20071212/pls.xsd")
-            );
+        //    // Create the root element
+        //    var lexicon = new XElement(ns + "lexicon",
+        //        new XAttribute("version", "1.0"),
+        //        new XAttribute("alphabet", "sapi"),
+        //        new XAttribute(XNamespace.Xml + "lang", "ja-JP"),
+        //        new XAttribute(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance"),
+        //        new XAttribute(XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance") + "schemaLocation",
+        //            "http://www.w3.org/2005/01/pronunciation-lexicon http://www.w3.org/TR/2007/CR-pronunciation-lexicon-20071212/pls.xsd")
+        //    );
 
             
-            var seenGraphemes = new HashSet<string>(StringComparer.Ordinal);
+        //    var seenGraphemes = new HashSet<string>(StringComparer.Ordinal);
 
-            using (var workbook = new XLWorkbook(excelPath))
-            {
-                var worksheet = workbook.Worksheet(1); // Sheet 1
-                foreach (var row in worksheet.RangeUsed().RowsUsed().Skip(1))
-                {
-                    string grapheme = NormalizeKey(row.Cell(1).GetString());
-                    string phoneme = NormalizePhoneme(row.Cell(2).GetString());
+        //    using (var workbook = new XLWorkbook(excelPath))
+        //    {
+        //        var worksheet = workbook.Worksheet(1); // Sheet 1
+        //        foreach (var row in worksheet.RangeUsed().RowsUsed().Skip(1))
+        //        {
+        //            string grapheme = NormalizeKey(row.Cell(1).GetString());
+        //            string phoneme = NormalizePhoneme(row.Cell(2).GetString());
 
-                    if (string.IsNullOrWhiteSpace(grapheme) || string.IsNullOrWhiteSpace(phoneme))
-                        continue;
+        //            if (string.IsNullOrWhiteSpace(grapheme) || string.IsNullOrWhiteSpace(phoneme))
+        //                continue;
 
-                    // Duplicate check (by grapheme)
-                    if (!seenGraphemes.Add(grapheme))
-                    {
-                        ErrorLogger.LogError($"Duplicate grapheme skipped: \"{grapheme}\"");
-                        continue; // skip this row
-                    }
+        //            // Duplicate check (by grapheme)
+        //            if (!seenGraphemes.Add(grapheme))
+        //            {
+        //                ErrorLogger.LogError($"Duplicate grapheme skipped: \"{grapheme}\"");
+        //                continue; // skip this row
+        //            }
 
-                    var lexeme = new XElement(ns + "lexeme",
-                        new XElement(ns + "grapheme", grapheme),
-                        new XElement(ns + "phoneme", phoneme)
-                    );
-                    lexicon.Add(lexeme);
-                }
-            }
+        //            var lexeme = new XElement(ns + "lexeme",
+        //                new XElement(ns + "grapheme", grapheme),
+        //                new XElement(ns + "phoneme", phoneme)
+        //            );
+        //            lexicon.Add(lexeme);
+        //        }
+        //    }
 
-            var doc = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), lexicon);
-            doc.Save(outputXmlPath);
-            return outputXmlPath;
-        }
-        private static string NormalizeKey(string s)
-        {
-            if (s == null) return string.Empty;
-            s = s.Trim();
-            s = s.Replace("\u3000", " "); // full-width space → half-width
-            s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", " ");
-            return s;
-        }
-        private static string NormalizePhoneme(string s)
-        {
-            return string.IsNullOrEmpty(s) ? string.Empty : s.Trim();
-        }
+        //    var doc = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), lexicon);
+        //    doc.Save(outputXmlPath);
+        //    return outputXmlPath;
+        //}
+        //private static string NormalizeKey(string s)
+        //{
+        //    if (s == null) return string.Empty;
+        //    s = s.Trim();
+        //    s = s.Replace("\u3000", " "); // full-width space → half-width
+        //    s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", " ");
+        //    return s;
+        //}
+        //private static string NormalizePhoneme(string s)
+        //{
+        //    return string.IsNullOrEmpty(s) ? string.Empty : s.Trim();
+        //}
         
         public async Task<bool> GenerateTextToSpeechAsync(string inputText,TextValue lanAndVoice)
         {
@@ -128,31 +128,31 @@ namespace WindowsFormsApp1.Helper
                     ErrorLogger.LogError($"Dictionary file not found: {outputXmlPath}");
 
                 }
-                bool regenerate = false;
+                //bool regenerate = false;
 
-                if (!File.Exists(outputXmlPath))
-                {
-                    // No XML yet, must generate
-                    regenerate = true;
-                }
-                else
-                {
-                    DateTime excelDate = File.GetLastWriteTimeUtc(dictPath);
-                    DateTime xmlDate = File.GetLastWriteTimeUtc(outputXmlPath);
+                //if (!File.Exists(outputXmlPath))
+                //{
+                //    // No XML yet, must generate
+                //    regenerate = true;
+                //}
+                //else
+                //{
+                //    DateTime excelDate = File.GetLastWriteTimeUtc(dictPath);
+                //    DateTime xmlDate = File.GetLastWriteTimeUtc(outputXmlPath);
 
-                    if (excelDate > xmlDate)
-                    {
-                        // Excel has changed since XML was generated
-                        regenerate = true;
-                    }
-                }
+                //    if (excelDate > xmlDate)
+                //    {
+                //        // Excel has changed since XML was generated
+                //        regenerate = true;
+                //    }
+                //}
               
-                if (regenerate)
-                {
-                    // Call your XML generation code
-                    var newxmlfile = GenerateLexiconFromExcel(dictPath, outputXmlPath);
+                //if (regenerate)
+                //{
+                //    // Call your XML generation code
+                //    var newxmlfile = GenerateLexiconFromExcel(dictPath, outputXmlPath);
 
-                }
+                //}
 
                 var helper = new PhonemeLexiconHelper(outputXmlPath);
                 // 2. Inject phoneme tags into your input text
@@ -181,31 +181,6 @@ namespace WindowsFormsApp1.Helper
             }
         }
 
-        //Craete Audio File using Azure AI
-        private async Task SynthesizeAudioAsync(string key, string region, string text, string language, string voice1, string outputFilePath)
-        {
-            var speechConfig = SpeechConfig.FromSubscription(key, region);
-            speechConfig.SetSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Riff16Khz16BitMonoPcm);
-
-            speechConfig.SpeechSynthesisLanguage = language;
-            speechConfig.SpeechSynthesisVoiceName = voice1;
-
-            using (var speechSynthesizer = new SpeechSynthesizer(speechConfig, null))
-            {
-                try
-                {
-                    var result = await speechSynthesizer.SpeakTextAsync(text);
-                    var stream = AudioDataStream.FromResult(result);
-                    await stream.SaveToWaveFileAsync(outputFilePath);
-                }
-                catch (Exception ex)
-                {
-                    // Handle the exception appropriately, like logging the error or notifying the user
-                    Console.Error.WriteLine("Error saving audio file: " + ex.Message);
-                }
-
-            }
-        }
 
       
         public static TextValue MapQuizModelToTextValue(QuizParserModel quizModel, List<LanguageParsedModel> languageVoiceMap)

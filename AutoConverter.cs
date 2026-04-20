@@ -388,57 +388,7 @@ namespace WindowsFormsApp1
             }
         }
 
-        private async Task ProcessWidges(WidgetContainer container, WidgetParsedCommonModel widgetParsedModel)
-        {
-            IAutoWidgetProcessor processor = null;
-
-            var instance = GlobalConfigPropreties.Instance;
-
-            instance.AddLine(container.Version);
-            instance.AddLine(container.Widgets.Count.ToString());
-
-
-            var formService = new FormService();
-
-            foreach (var widget in container.Widgets)
-            {
-                processor = GetWidgetProcessor(widget);
-
-                if (processor is null)
-                {
-                    foreach (var line in widget.Lines)
-                    {
-                        if (line.Text.Contains("Template<S>"))
-                        {
-                            (int right, int wrong) = TextExtrator.ExtractRightOrWorngAnsFromLine(line.Text);
-                            instance.AddLine(line.Text.Replace("Template", "").Replace($"({right},{wrong})", ""));
-                        } 
-                        else
-                        {
-                            instance.AddLine(line.Text.Replace("Template", ""));
-                        }
-                    }
-                    continue;
-                }
-                await processor.ProcessWidges(widget, widgetParsedModel);
-            }
-
-            instance.SavePlayConfig(System.IO.Path.Combine(GlobalProperties.OutputPath, "PLAY_CONFIG.TXT"));
-
-            if (QuizProperties.Instance.Options.Any() && container.Widgets.Any(w => w.Lines.Any(l => l.Type == LineTypeEnum.Text || l.Type == LineTypeEnum.Selection)))
-            {
-                var quizService = new QuizService();
-                quizService.BuildTextData(QuizProperties.Instance, container.Widgets.First());
-
-                var csvGenerator = new CsvGenerator();
-                csvGenerator.UpdateCSVFile(System.IO.Path.Combine(GlobalProperties.OutputPath, "CONTENTINFO.CSV"), QuizProperties.Instance);
-            }
-
-            ContentNameGeneratorService contentNameGeneratorService = new ContentNameGeneratorService();
-            contentNameGeneratorService.GenerateContentNameFile(GlobalProperties.GuideName, System.IO.Path.Combine(GlobalProperties.OutputPath, "CONTENTNAME.TXT"));
-
-            instance.Clear();
-        }
+       
 
         private void btn_template_click(object sender, EventArgs e)
         {
@@ -482,21 +432,7 @@ namespace WindowsFormsApp1
             }
         }
 
-        private IAutoWidgetProcessor GetWidgetProcessor(Widget widget)
-        {
-            if (widget.Lines.Any(c => c.WidgetType == WidgetTypeEnum.Animation))
-            {
-                return new AnimationWidgetProcessor();
-            }
-            else if (widget.Lines.Any(c => c.WidgetType == WidgetTypeEnum.Caption))
-            {
-                return new CaptionWidgetProcessor(_languageList);
-            }
-            
-
-
-            return null;
-        }
+       
 
         private void Back_button_Click(object sender, EventArgs e)
         {
@@ -522,24 +458,9 @@ namespace WindowsFormsApp1
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    //string FilePath = openFileDialog.FileName;
-                    //LanTextBx.Text = FilePath;
-                    //LoadLanguageFile(LanTextBx.Text);
-
-                  
                     string selectedFilePath = openFileDialog.FileName;
                     LanTextBx.Text = selectedFilePath;
 
-                    //var languages = new LanguageExcelParser().ParseFile(FilePath).Skip(1);
-                    //var json = JsonSerializer.Serialize(languages);
-                    //var jsonFilePath = Path.Combine( DirectoryHelper.GetTempDirectory(), "Language.json");
-
-                    //if (File.Exists(jsonFilePath))
-                    //{
-                    //    File.Delete(jsonFilePath);
-                    //} 
-
-                    //File.WriteAllText(jsonFilePath, json); 
                 }
             }
 
@@ -571,10 +492,7 @@ namespace WindowsFormsApp1
 
         private void AppendError(string error)
         {
-            // Option 1: Only show latest error
-            // txtError.Text = error;
-
-            // Option 2: Show all errors (history)
+            
             txt_userMessage.Text = ErrorLogger.GetAllErrors();
             txt_userMessage.SelectionStart = txt_userMessage.Text.Length; // Scroll to bottom
             txt_userMessage.ScrollToCaret();
