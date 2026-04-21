@@ -116,9 +116,9 @@ namespace WindowsFormsApp1.Services
                     rows.Add(new DictionaryRowModel
                     {
                         RowNumber = row.RowNumber(),
-                        SerialNo = row.Cell(1).GetString()?.Trim(),   // Column A
-                        Word = row.Cell(2).GetString()?.Trim(),       // Column B
-                        Phoneme = row.Cell(3).GetString()?.Trim(),    // Column C
+                        //SerialNo = row.Cell(1).GetString()?.Trim(),   // Column A
+                        Word = row.Cell(1).GetString()?.Trim(),       // Column B
+                        Phoneme = row.Cell(2).GetString()?.Trim(),    // Column C
                         Status = "Read",
                         IsRemoved = false,
                         RemovedReason = ""
@@ -230,16 +230,16 @@ namespace WindowsFormsApp1.Services
             {
                 var worksheet = workbook.Worksheets.Add("Dictionary");
 
-                worksheet.Cell(1, 1).Value = "SL";
-                worksheet.Cell(1, 2).Value = "Word";
-                worksheet.Cell(1, 3).Value = "Phoneme";
+                //worksheet.Cell(1, 1).Value = "SL";
+                worksheet.Cell(1, 1).Value = "Word";
+                worksheet.Cell(1, 2).Value = "Phoneme";
 
                 int excelRow = 2;
                 foreach (var row in cleanedRows)
                 {
-                    worksheet.Cell(excelRow, 1).Value = row.SerialNo;
-                    worksheet.Cell(excelRow, 2).Value = row.Word;
-                    worksheet.Cell(excelRow, 3).Value = row.Phoneme;
+                    //worksheet.Cell(excelRow, 1).Value = row.SerialNo;
+                    worksheet.Cell(excelRow, 1).Value = row.Word;
+                    worksheet.Cell(excelRow, 2).Value = row.Phoneme;
                     excelRow++;
                 }
 

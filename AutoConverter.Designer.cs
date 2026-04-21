@@ -50,12 +50,16 @@
             this.label7 = new System.Windows.Forms.Label();
             this.txtIBCFile = new System.Windows.Forms.TextBox();
             this.btn_IbcFiles = new System.Windows.Forms.Button();
+            this.ParentFolder = new System.Windows.Forms.Button();
+            this.txt_workspace = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btn_template
             // 
             this.btn_template.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.btn_template.Location = new System.Drawing.Point(788, 13);
+            this.btn_template.Location = new System.Drawing.Point(788, 350);
             this.btn_template.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.btn_template.Name = "btn_template";
             this.btn_template.Size = new System.Drawing.Size(130, 47);
@@ -68,7 +72,7 @@
             // 
             this.txt_template.BackColor = System.Drawing.Color.White;
             this.txt_template.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txt_template.Location = new System.Drawing.Point(50, 79);
+            this.txt_template.Location = new System.Drawing.Point(50, 416);
             this.txt_template.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.txt_template.Name = "txt_template";
             this.txt_template.Size = new System.Drawing.Size(868, 44);
@@ -81,7 +85,7 @@
             this.label2.Cursor = System.Windows.Forms.Cursors.Default;
             this.label2.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.ForeColor = System.Drawing.Color.Black;
-            this.label2.Location = new System.Drawing.Point(44, 24);
+            this.label2.Location = new System.Drawing.Point(44, 361);
             this.label2.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(345, 55);
@@ -91,7 +95,7 @@
             // SDataButton
             // 
             this.SDataButton.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.SDataButton.Location = new System.Drawing.Point(788, 367);
+            this.SDataButton.Location = new System.Drawing.Point(788, 704);
             this.SDataButton.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.SDataButton.Name = "SDataButton";
             this.SDataButton.Size = new System.Drawing.Size(130, 47);
@@ -104,7 +108,7 @@
             // 
             this.txt_FilePath.BackColor = System.Drawing.Color.White;
             this.txt_FilePath.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txt_FilePath.Location = new System.Drawing.Point(50, 433);
+            this.txt_FilePath.Location = new System.Drawing.Point(50, 770);
             this.txt_FilePath.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.txt_FilePath.Name = "txt_FilePath";
             this.txt_FilePath.Size = new System.Drawing.Size(868, 44);
@@ -118,7 +122,7 @@
             this.label1.Cursor = System.Windows.Forms.Cursors.Default;
             this.label1.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label1.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label1.Location = new System.Drawing.Point(44, 372);
+            this.label1.Location = new System.Drawing.Point(44, 709);
             this.label1.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(483, 55);
@@ -129,7 +133,7 @@
             // btn_audioFile
             // 
             this.btn_audioFile.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.btn_audioFile.Location = new System.Drawing.Point(788, 131);
+            this.btn_audioFile.Location = new System.Drawing.Point(788, 468);
             this.btn_audioFile.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.btn_audioFile.Name = "btn_audioFile";
             this.btn_audioFile.Size = new System.Drawing.Size(130, 47);
@@ -142,7 +146,7 @@
             // 
             this.txt_audioFile.BackColor = System.Drawing.Color.White;
             this.txt_audioFile.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txt_audioFile.Location = new System.Drawing.Point(50, 197);
+            this.txt_audioFile.Location = new System.Drawing.Point(50, 534);
             this.txt_audioFile.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.txt_audioFile.Name = "txt_audioFile";
             this.txt_audioFile.Size = new System.Drawing.Size(868, 44);
@@ -155,7 +159,7 @@
             this.label3.Cursor = System.Windows.Forms.Cursors.Default;
             this.label3.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label3.ForeColor = System.Drawing.Color.Black;
-            this.label3.Location = new System.Drawing.Point(44, 140);
+            this.label3.Location = new System.Drawing.Point(44, 477);
             this.label3.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(384, 55);
@@ -165,7 +169,7 @@
             // btn_output
             // 
             this.btn_output.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.btn_output.Location = new System.Drawing.Point(788, 516);
+            this.btn_output.Location = new System.Drawing.Point(788, 853);
             this.btn_output.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.btn_output.Name = "btn_output";
             this.btn_output.Size = new System.Drawing.Size(130, 47);
@@ -178,7 +182,7 @@
             // 
             this.txt_outputLocation.BackColor = System.Drawing.Color.White;
             this.txt_outputLocation.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txt_outputLocation.Location = new System.Drawing.Point(50, 582);
+            this.txt_outputLocation.Location = new System.Drawing.Point(50, 919);
             this.txt_outputLocation.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.txt_outputLocation.Name = "txt_outputLocation";
             this.txt_outputLocation.Size = new System.Drawing.Size(868, 44);
@@ -191,7 +195,7 @@
             this.label4.Cursor = System.Windows.Forms.Cursors.Default;
             this.label4.Font = new System.Drawing.Font("Times New Roman", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label4.ForeColor = System.Drawing.Color.Black;
-            this.label4.Location = new System.Drawing.Point(44, 519);
+            this.label4.Location = new System.Drawing.Point(44, 856);
             this.label4.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(450, 51);
@@ -239,7 +243,7 @@
             // LangBtn
             // 
             this.LangBtn.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.LangBtn.Location = new System.Drawing.Point(788, 251);
+            this.LangBtn.Location = new System.Drawing.Point(788, 588);
             this.LangBtn.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.LangBtn.Name = "LangBtn";
             this.LangBtn.Size = new System.Drawing.Size(130, 47);
@@ -252,7 +256,7 @@
             // 
             this.LanTextBx.BackColor = System.Drawing.Color.White;
             this.LanTextBx.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LanTextBx.Location = new System.Drawing.Point(50, 317);
+            this.LanTextBx.Location = new System.Drawing.Point(50, 654);
             this.LanTextBx.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.LanTextBx.Name = "LanTextBx";
             this.LanTextBx.Size = new System.Drawing.Size(868, 44);
@@ -265,7 +269,7 @@
             this.label5.Cursor = System.Windows.Forms.Cursors.Default;
             this.label5.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.label5.Location = new System.Drawing.Point(44, 258);
+            this.label5.Location = new System.Drawing.Point(44, 595);
             this.label5.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(586, 55);
@@ -289,7 +293,7 @@
             this.label7.Cursor = System.Windows.Forms.Cursors.Default;
             this.label7.Font = new System.Drawing.Font("Times New Roman", 21.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label7.ForeColor = System.Drawing.Color.Black;
-            this.label7.Location = new System.Drawing.Point(44, 618);
+            this.label7.Location = new System.Drawing.Point(44, 955);
             this.label7.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(491, 51);
@@ -300,7 +304,7 @@
             // 
             this.txtIBCFile.BackColor = System.Drawing.Color.White;
             this.txtIBCFile.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txtIBCFile.Location = new System.Drawing.Point(50, 675);
+            this.txtIBCFile.Location = new System.Drawing.Point(50, 1012);
             this.txtIBCFile.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.txtIBCFile.Name = "txtIBCFile";
             this.txtIBCFile.Size = new System.Drawing.Size(868, 44);
@@ -309,13 +313,63 @@
             // btn_IbcFiles
             // 
             this.btn_IbcFiles.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.btn_IbcFiles.Location = new System.Drawing.Point(799, 618);
+            this.btn_IbcFiles.Location = new System.Drawing.Point(799, 955);
             this.btn_IbcFiles.Name = "btn_IbcFiles";
             this.btn_IbcFiles.Size = new System.Drawing.Size(119, 50);
             this.btn_IbcFiles.TabIndex = 55;
             this.btn_IbcFiles.Text = "....";
             this.btn_IbcFiles.UseVisualStyleBackColor = false;
             this.btn_IbcFiles.Click += new System.EventHandler(this.btn_IbcFiles_Click);
+            // 
+            // ParentFolder
+            // 
+            this.ParentFolder.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.ParentFolder.Location = new System.Drawing.Point(768, 94);
+            this.ParentFolder.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
+            this.ParentFolder.Name = "ParentFolder";
+            this.ParentFolder.Size = new System.Drawing.Size(130, 47);
+            this.ParentFolder.TabIndex = 58;
+            this.ParentFolder.Text = "...";
+            this.ParentFolder.UseVisualStyleBackColor = false;
+            this.ParentFolder.Click += new System.EventHandler(this.ParentFolder_Click);
+            // 
+            // txt_workspace
+            // 
+            this.txt_workspace.BackColor = System.Drawing.Color.White;
+            this.txt_workspace.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txt_workspace.Location = new System.Drawing.Point(30, 160);
+            this.txt_workspace.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
+            this.txt_workspace.Name = "txt_workspace";
+            this.txt_workspace.Size = new System.Drawing.Size(868, 44);
+            this.txt_workspace.TabIndex = 57;
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.BackColor = System.Drawing.Color.Orange;
+            this.label8.Cursor = System.Windows.Forms.Cursors.Default;
+            this.label8.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.ForeColor = System.Drawing.Color.Black;
+            this.label8.Location = new System.Drawing.Point(24, 101);
+            this.label8.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(307, 55);
+            this.label8.TabIndex = 56;
+            this.label8.Text = "Parent Folder";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.BackColor = System.Drawing.Color.Orange;
+            this.label9.Cursor = System.Windows.Forms.Cursors.Default;
+            this.label9.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label9.ForeColor = System.Drawing.Color.Black;
+            this.label9.Location = new System.Drawing.Point(24, 281);
+            this.label9.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(285, 55);
+            this.label9.TabIndex = 59;
+            this.label9.Text = "Child Folder";
             // 
             // AutoConverter
             // 
@@ -324,6 +378,10 @@
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.ClientSize = new System.Drawing.Size(1878, 1128);
+            this.Controls.Add(this.label9);
+            this.Controls.Add(this.ParentFolder);
+            this.Controls.Add(this.txt_workspace);
+            this.Controls.Add(this.label8);
             this.Controls.Add(this.btn_IbcFiles);
             this.Controls.Add(this.txtIBCFile);
             this.Controls.Add(this.label7);
@@ -381,5 +439,9 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox txtIBCFile;
         private System.Windows.Forms.Button btn_IbcFiles;
+        private System.Windows.Forms.Button ParentFolder;
+        private System.Windows.Forms.TextBox txt_workspace;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label label9;
     }
 }

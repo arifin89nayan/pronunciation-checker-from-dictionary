@@ -41,6 +41,7 @@ namespace WindowsFormsApp1
             txt_FilePath.Text = Properties.Settings.Default.CsvFilePath;
             LanTextBx.Text = Properties.Settings.Default.ExcelLanguage;
             txtIBCFile.Text = Properties.Settings.Default.OutPutIbcFile;
+            txt_workspace.Text = Properties.Settings.Default.txt_workspace;
             _fileService = new FileService();
         }
         private void CopyDataIdFoldersToIbcFolder()
@@ -526,6 +527,118 @@ namespace WindowsFormsApp1
         private void label1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void ParentFolder_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog dlg = new FolderBrowserDialog())
+            {
+                dlg.Description = "Select your GuideProject workspace (root) folder";
+                dlg.ShowNewFolderButton = false;
+
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    txt_workspace.Text = dlg.SelectedPath;
+                    AutoFillFromWorkspace(dlg.SelectedPath);
+                }
+            }
+        }
+        private void AutoFillFromWorkspace(string root)
+        {
+            // ── Expected sub-paths (edit these to match YOUR folder names) ──
+            var folderMap = new (string subPath, System.Windows.Forms.TextBox target, bool isFile)[]
+            {
+        (@"Template",                txt_template,       isFile: false),
+        (@"Audio Files",             txt_audioFile,      isFile: false),
+        (@"Output",                  txt_outputLocation, isFile: false),
+        (@"IBC Files",               txtIBCFile,         isFile: false),
+        
+            };
+
+            var missing = new System.Text.StringBuilder();
+            var filled = new System.Text.StringBuilder();
+
+            //foreach (var (subPath, textBox, isFile) in map)
+            //{
+            //    string fullPath = System.IO.Path.Combine(root, subPath);
+            //    bool exists = isFile ? File.Exists(fullPath) : Directory.Exists(fullPath);
+
+            //    if (exists)
+            //    {
+            //        textBox.Text = fullPath;
+            //        filled.AppendLine($"  ✓  {subPath}");
+            //    }
+            //    else
+            //    {
+            //        missing.AppendLine($"  ✗  {subPath}  ← not found, set manually");
+            //    }
+            //}
+            foreach (var (subPath, textBox,_) in folderMap)
+            {
+                string fullPath = System.IO.Path.Combine(root, subPath);
+                if (Directory.Exists(fullPath))
+                {
+                    textBox.Text = fullPath;
+                    filled.AppendLine($"  ✓  {subPath}");
+                }
+                else
+                {
+                    missing.AppendLine($"  ✗  {subPath}  ← not found, set manually");
+                }
+            }
+
+            // ── Language Excel: search Content\ for first .xlsx/.xls ──
+            string languageFolder = System.IO.Path.Combine(root, "Language");
+
+            string langFile = FindFirstFile(languageFolder, "*.xlsx", "*.xls");
+            if (langFile != null)
+            {
+                LanTextBx.Text = langFile;
+                filled.AppendLine($"  ✓  Language Excel  →  {System.IO.Path.GetFileName(langFile)}");
+            }
+            else
+            {
+                missing.AppendLine($"  ✗  Language Excel (.xlsx/.xls) not found in Content\\");
+            }
+
+            // ── CSV/Excel: search Content\ for first .csv, fallback to .xlsx ──
+            string contentFolder = System.IO.Path.Combine(root, "Content");
+            string contentFile = FindFirstFile(contentFolder, "*.xlsx", "*.xls");
+            if (contentFile != null)
+            {
+                txt_FilePath.Text = contentFile;
+                filled.AppendLine($"  ✓  Excel  →  {System.IO.Path.GetFileName(contentFile)}");
+            }
+            else
+            {
+                missing.AppendLine($"  ✗  Excel file not found in Content\\");
+            }
+
+            // Save workspace root
+            Properties.Settings.Default.txt_workspace = root;
+            Properties.Settings.Default.Save();
+
+            // Report to the message box
+            txt_userMessage.Clear();
+            if (filled.Length > 0)
+                txt_userMessage.AppendText("Auto-filled from workspace:\r\n" + filled.ToString());
+            if (missing.Length > 0)
+                txt_userMessage.AppendText("\r\nNot found (set manually):\r\n" + missing.ToString());
+        }
+        private string FindFirstFile(string folder, params string[] searchPatterns)
+        {
+            if (!Directory.Exists(folder))
+                return null;
+
+            foreach (string pattern in searchPatterns)
+            {
+                string match = Directory.EnumerateFiles(folder, pattern, SearchOption.TopDirectoryOnly)
+                                        .FirstOrDefault();
+                if (match != null)
+                    return match;
+            }
+
+            return null;
         }
     }
 }
