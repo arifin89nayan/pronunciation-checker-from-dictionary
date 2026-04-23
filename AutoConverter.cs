@@ -291,8 +291,7 @@ namespace WindowsFormsApp1
 
             foreach (var widget in container.Widgets)
             {
-                //var processor = new QuizWidgetProcessor();
-                //await processor.ProcessWidges(widget, model);
+               
                 QuizProperties.Instance.CurrentOffset = 0;
                 var processor = new QuizWidgetProcessor(_languageList);
                 await processor.ProcessWidges(widget, model);
@@ -346,12 +345,7 @@ namespace WindowsFormsApp1
         }
         private IAutoWidgetProcessor GetGuideWidgetProcessor(Widget widget)
         {
-            //if (widget.Lines.Any(l => l.WidgetType == Enums.WidgetTypeEnum.Animation))
-            //    return new AnimationWidgetProcessor();
-            //if (widget.Lines.Any(l => l.WidgetType == Enums.WidgetTypeEnum.Caption))
-            //    return new CaptionWidgetProcessor();
-
-            //return null;
+            
             if (widget.Lines.Any(l => l.WidgetType == WidgetTypeEnum.Animation))
                 return new AnimationWidgetProcessor();
 
@@ -362,78 +356,92 @@ namespace WindowsFormsApp1
         }
         private bool ValidateConvert()
         {
-            //return txt_audioFile.Text != string.Empty
-            //    && txt_FilePath.Text != string.Empty
-            //    && txt_template.Text != string.Empty
-            //    && txt_outputLocation.Text != string.Empty;
+            
             return txt_FilePath.Text != string.Empty
               && txt_template.Text != string.Empty;
               
         }
 
-        private void SDataButton_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                
-                openFileDialog.Title = "Select a File";
-                openFileDialog.Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
+        //private void SDataButton_Click(object sender, EventArgs e)
+        //{
+        //    using (OpenFileDialog openFileDialog = new OpenFileDialog())
+        //    {
 
-                openFileDialog.Multiselect = false;
+        //        openFileDialog.Title = "Select a File";
+        //        openFileDialog.Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
 
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    string selectedFilePath = openFileDialog.FileName;
-                    txt_FilePath.Text = selectedFilePath;
-                }
-            }
-        }
+        //        openFileDialog.Multiselect = false;
 
-       
+        //        if (openFileDialog.ShowDialog() == DialogResult.OK)
+        //        {
+        //            string selectedFilePath = openFileDialog.FileName;
+        //            txt_FilePath.Text = selectedFilePath;
+        //        }
+        //    }
+        //    BrowseFile(
+        //txt_FilePath,
+        //"Select CSV/Excel File",
+        //"Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*");
+        //}
+        private void SDataButton_Click(object sender, EventArgs e)           
+         => BrowseFile(txt_FilePath, "Select Language Excel File",
+                "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|All Files (*.*)|*.*");
 
+
+
+
+
+        //private void btn_template_click(object sender, EventArgs e)
+        //{
+        //    using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+        //    {
+        //        folderDialog.Description = "Select a Folder";
+        //        folderDialog.ShowNewFolderButton = true;
+
+        //        if (folderDialog.ShowDialog() == DialogResult.OK)
+        //        {
+        //            txt_template.Text = folderDialog.SelectedPath;
+        //        }
+        //    }
+        //    BrowseFolder(txt_template, "Select Template Folder");
+        //}
         private void btn_template_click(object sender, EventArgs e)
-        {
-            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-            {
-                folderDialog.Description = "Select a Folder";
-                folderDialog.ShowNewFolderButton = true;
+            => BrowseFolder(txt_template, "Select Template Folder");
+        //private void btn_audioFile_Click(object sender, EventArgs e)
+        //{
+        //    using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+        //    {
+        //        folderDialog.Description = "Select a Folder";
+        //        folderDialog.ShowNewFolderButton = true;
 
-                if (folderDialog.ShowDialog() == DialogResult.OK)
-                {
-                    txt_template.Text = folderDialog.SelectedPath;
-                }
-            }
-        }
-
+        //        if (folderDialog.ShowDialog() == DialogResult.OK)
+        //        {
+        //            txt_audioFile.Text = folderDialog.SelectedPath;
+        //        }
+        //    }
+        //    BrowseFolder(txt_audioFile, "Select Audio Folder");
+        //}
         private void btn_audioFile_Click(object sender, EventArgs e)
-        {
-            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-            {
-                folderDialog.Description = "Select a Folder";
-                folderDialog.ShowNewFolderButton = true;
+            => BrowseFolder(txt_audioFile, "Select Audio Folder");
 
-                if (folderDialog.ShowDialog() == DialogResult.OK)
-                {
-                    txt_audioFile.Text = folderDialog.SelectedPath;
-                }
-            }
-        }
+        //private void btn_output_click(object sender, EventArgs e)
+        //{
+        //    using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+        //    {
+        //        folderDialog.Description = "Select a Folder";
+        //        folderDialog.ShowNewFolderButton = true;
 
+        //        if (folderDialog.ShowDialog() == DialogResult.OK)
+        //        {
+        //            txt_outputLocation.Text = folderDialog.SelectedPath;
+        //        }
+        //    }
+        //    BrowseFolder(txt_outputLocation, "Select Output Folder");
+        //}
         private void btn_output_click(object sender, EventArgs e)
-        {
-            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-            {
-                folderDialog.Description = "Select a Folder";
-                folderDialog.ShowNewFolderButton = true;
+            => BrowseFolder(txt_outputLocation, "Select Output Folder");
 
-                if (folderDialog.ShowDialog() == DialogResult.OK)
-                {
-                    txt_outputLocation.Text = folderDialog.SelectedPath;
-                }
-            }
-        }
 
-       
 
         private void Back_button_Click(object sender, EventArgs e)
         {
@@ -447,25 +455,33 @@ namespace WindowsFormsApp1
 
         }
 
+        //private void LangBtn_Click(object sender, EventArgs e)
+        //{
+        //    BrowseFile(
+        //LanTextBx,
+        //"Select Language Excel File",
+        //"Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*");
+        //    using (OpenFileDialog openFileDialog = new OpenFileDialog())
+        //    {
+
+        //        openFileDialog.Title = "Select a File";
+        //        openFileDialog.Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
+
+        //        openFileDialog.Multiselect = false;
+
+        //        if (openFileDialog.ShowDialog() == DialogResult.OK)
+        //        {
+        //            string selectedFilePath = openFileDialog.FileName;
+        //            LanTextBx.Text = selectedFilePath;
+
+        //        }
+        //    }
+
+
+        //}
         private void LangBtn_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-
-                openFileDialog.Title = "Select a File";
-                openFileDialog.Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
-
-                openFileDialog.Multiselect = false;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    string selectedFilePath = openFileDialog.FileName;
-                    LanTextBx.Text = selectedFilePath;
-
-                }
-            }
-
-        }
+            => BrowseFile(LanTextBx, "Select Language Excel File",
+                "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|All Files (*.*)|*.*");
         private void LoadLanguageFile(string filePath)
         {
             var parser = new LanguageExcelParser();
@@ -504,20 +520,23 @@ namespace WindowsFormsApp1
             ErrorLogger.ErrorLogged -= OnErrorLogged; // Unsubscribe!
             base.OnFormClosed(e);
         }
+        //private void btn_IbcFiles_Click(object sender, EventArgs e)
+        //{
+        //    using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+        //    {
+        //        folderDialog.Description = "Select a Folder";
+        //        folderDialog.ShowNewFolderButton = true;
+
+        //        if (folderDialog.ShowDialog() == DialogResult.OK)
+        //        {
+        //            txtIBCFile.Text = folderDialog.SelectedPath;
+        //        }
+        //    }
+        //    BrowseFolder(txtIBCFile, "Select IBC Folder");
+
+        //}
         private void btn_IbcFiles_Click(object sender, EventArgs e)
-        {
-            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-            {
-                folderDialog.Description = "Select a Folder";
-                folderDialog.ShowNewFolderButton = true;
-
-                if (folderDialog.ShowDialog() == DialogResult.OK)
-                {
-                    txtIBCFile.Text = folderDialog.SelectedPath;
-                }
-            }
-
-        }
+            => BrowseFolder(txtIBCFile, "Select IBC Folder");
 
         private void txt_FilePath_TextChanged(object sender, EventArgs e)
         {
@@ -535,6 +554,8 @@ namespace WindowsFormsApp1
             {
                 dlg.Description = "Select your GuideProject workspace (root) folder";
                 dlg.ShowNewFolderButton = false;
+                string startFolder = GetBestStartFolder(txt_workspace.Text);
+                dlg.SelectedPath = startFolder;
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
@@ -545,6 +566,8 @@ namespace WindowsFormsApp1
         }
         private void AutoFillFromWorkspace(string root)
         {
+            var missing = new System.Text.StringBuilder();
+            var filled = new System.Text.StringBuilder();
             // ── Expected sub-paths (edit these to match YOUR folder names) ──
             var folderMap = new (string subPath, System.Windows.Forms.TextBox target, bool isFile)[]
             {
@@ -555,24 +578,9 @@ namespace WindowsFormsApp1
         
             };
 
-            var missing = new System.Text.StringBuilder();
-            var filled = new System.Text.StringBuilder();
+          
 
-            //foreach (var (subPath, textBox, isFile) in map)
-            //{
-            //    string fullPath = System.IO.Path.Combine(root, subPath);
-            //    bool exists = isFile ? File.Exists(fullPath) : Directory.Exists(fullPath);
-
-            //    if (exists)
-            //    {
-            //        textBox.Text = fullPath;
-            //        filled.AppendLine($"  ✓  {subPath}");
-            //    }
-            //    else
-            //    {
-            //        missing.AppendLine($"  ✗  {subPath}  ← not found, set manually");
-            //    }
-            //}
+            
             foreach (var (subPath, textBox,_) in folderMap)
             {
                 string fullPath = System.IO.Path.Combine(root, subPath);
@@ -639,6 +647,78 @@ namespace WindowsFormsApp1
             }
 
             return null;
+        }
+
+        // This method tries to find the best starting folder for browsing based on the current textbox value and parent folder
+        private string GetBestStartFolder(string currentPath)
+        {
+            // 1) use current textbox path if valid
+            if (!string.IsNullOrWhiteSpace(currentPath))
+            {
+                if (Directory.Exists(currentPath))
+                    return currentPath;
+
+                if (File.Exists(currentPath))
+                    return System.IO.Path.GetDirectoryName(currentPath);
+            }
+
+            // 2) otherwise use parent folder if valid
+            if (!string.IsNullOrWhiteSpace(txt_workspace.Text) && Directory.Exists(txt_workspace.Text))
+            {
+                return txt_workspace.Text;
+            }
+
+            // 3) fallback
+            return Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        }
+        private void BrowseFolder(System.Windows.Forms.TextBox targetTextBox, string description)
+        {
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = description;
+                folderDialog.ShowNewFolderButton = true;
+
+                string startFolder = GetBestStartFolder(targetTextBox.Text);
+                folderDialog.SelectedPath = startFolder;
+
+                if (folderDialog.ShowDialog() == DialogResult.OK)
+                {
+                    targetTextBox.Text = folderDialog.SelectedPath;
+                }
+            }
+        }
+        private void BrowseFile(System.Windows.Forms.TextBox targetTextBox, string title, string filter)
+        {
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = title;
+                openFileDialog.Filter = filter;
+                openFileDialog.Multiselect = false;
+
+                string currentPath = targetTextBox.Text;
+
+                if (!string.IsNullOrWhiteSpace(currentPath))
+                {
+                    if (File.Exists(currentPath))
+                    {
+                        openFileDialog.InitialDirectory = System.IO.Path.GetDirectoryName(currentPath);
+                        openFileDialog.FileName = System.IO.Path.GetFileName(currentPath);
+                    }
+                    else if (Directory.Exists(currentPath))
+                    {
+                        openFileDialog.InitialDirectory = currentPath;
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(txt_workspace.Text) && Directory.Exists(txt_workspace.Text))
+                {
+                    openFileDialog.InitialDirectory = txt_workspace.Text;
+                }
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    targetTextBox.Text = openFileDialog.FileName;
+                }
+            }
         }
     }
 }
