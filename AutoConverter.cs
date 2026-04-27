@@ -1,26 +1,27 @@
-﻿using System;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
+using DocumentFormat.OpenXml.EMMA;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Vml;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1.Enums;
 using WindowsFormsApp1.Global;
-using WindowsFormsApp1.Helper.Quiz;
 using WindowsFormsApp1.Helper;
+using WindowsFormsApp1.Helper.Quiz;
+using WindowsFormsApp1.Models.AutoConverters;
 using WindowsFormsApp1.Models.Widgets;
 using WindowsFormsApp1.Services;
 using WindowsFormsApp1.Services.Abstraction;
-using WindowsFormsApp1.Models.AutoConverters;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using CsvHelper;
-using System.Globalization;
-using CsvHelper.Configuration;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using DocumentFormat.OpenXml.Spreadsheet;
-using DocumentFormat.OpenXml.EMMA;
-using System.Text.Json;
-using DocumentFormat.OpenXml.Vml;
-using System.Text.RegularExpressions;
 
 
 namespace WindowsFormsApp1
@@ -116,8 +117,12 @@ namespace WindowsFormsApp1
             Properties.Settings.Default.Save();
             Properties.Settings.Default.OutPutIbcFile = txtIBCFile.Text?.Trim() ?? ""; 
             Properties.Settings.Default.Save();
-            
 
+            if (!ValidateConvert())
+            {
+                txt_userMessage.Text = "Please select required files and folders correctly.";
+                return;
+            }
             LoadLanguageFile(LanTextBx.Text);
            
 
@@ -356,88 +361,26 @@ namespace WindowsFormsApp1
         }
         private bool ValidateConvert()
         {
-            
-            return txt_FilePath.Text != string.Empty
-              && txt_template.Text != string.Empty;
-              
+
+            return Directory.Exists(txt_template.Text)
+        && Directory.Exists(txt_audioFile.Text)
+        && Directory.Exists(txt_outputLocation.Text)
+        && Directory.Exists(txtIBCFile.Text)
+        && File.Exists(LanTextBx.Text)
+        && File.Exists(txt_FilePath.Text);
+
         }
-
-        //private void SDataButton_Click(object sender, EventArgs e)
-        //{
-        //    using (OpenFileDialog openFileDialog = new OpenFileDialog())
-        //    {
-
-        //        openFileDialog.Title = "Select a File";
-        //        openFileDialog.Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
-
-        //        openFileDialog.Multiselect = false;
-
-        //        if (openFileDialog.ShowDialog() == DialogResult.OK)
-        //        {
-        //            string selectedFilePath = openFileDialog.FileName;
-        //            txt_FilePath.Text = selectedFilePath;
-        //        }
-        //    }
-        //    BrowseFile(
-        //txt_FilePath,
-        //"Select CSV/Excel File",
-        //"Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*");
-        //}
         private void SDataButton_Click(object sender, EventArgs e)           
          => BrowseFile(txt_FilePath, "Select Language Excel File",
                 "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|All Files (*.*)|*.*");
 
-
-
-
-
-        //private void btn_template_click(object sender, EventArgs e)
-        //{
-        //    using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-        //    {
-        //        folderDialog.Description = "Select a Folder";
-        //        folderDialog.ShowNewFolderButton = true;
-
-        //        if (folderDialog.ShowDialog() == DialogResult.OK)
-        //        {
-        //            txt_template.Text = folderDialog.SelectedPath;
-        //        }
-        //    }
-        //    BrowseFolder(txt_template, "Select Template Folder");
-        //}
         private void btn_template_click(object sender, EventArgs e)
             => BrowseFolder(txt_template, "Select Template Folder");
-        //private void btn_audioFile_Click(object sender, EventArgs e)
-        //{
-        //    using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-        //    {
-        //        folderDialog.Description = "Select a Folder";
-        //        folderDialog.ShowNewFolderButton = true;
-
-        //        if (folderDialog.ShowDialog() == DialogResult.OK)
-        //        {
-        //            txt_audioFile.Text = folderDialog.SelectedPath;
-        //        }
-        //    }
-        //    BrowseFolder(txt_audioFile, "Select Audio Folder");
-        //}
+        
         private void btn_audioFile_Click(object sender, EventArgs e)
             => BrowseFolder(txt_audioFile, "Select Audio Folder");
 
-        //private void btn_output_click(object sender, EventArgs e)
-        //{
-        //    using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-        //    {
-        //        folderDialog.Description = "Select a Folder";
-        //        folderDialog.ShowNewFolderButton = true;
-
-        //        if (folderDialog.ShowDialog() == DialogResult.OK)
-        //        {
-        //            txt_outputLocation.Text = folderDialog.SelectedPath;
-        //        }
-        //    }
-        //    BrowseFolder(txt_outputLocation, "Select Output Folder");
-        //}
+       
         private void btn_output_click(object sender, EventArgs e)
             => BrowseFolder(txt_outputLocation, "Select Output Folder");
 
@@ -445,40 +388,12 @@ namespace WindowsFormsApp1
 
         private void Back_button_Click(object sender, EventArgs e)
         {
-
-            //NewStartingForm NewStart = new NewStartingForm();
-
-            //NewStart.Show();
-            this.Close();
-            
-
-
+            NewStartingForm newStart = new NewStartingForm();            
+            newStart.Show();
+            this.Hide();
         }
 
-        //private void LangBtn_Click(object sender, EventArgs e)
-        //{
-        //    BrowseFile(
-        //LanTextBx,
-        //"Select Language Excel File",
-        //"Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*");
-        //    using (OpenFileDialog openFileDialog = new OpenFileDialog())
-        //    {
-
-        //        openFileDialog.Title = "Select a File";
-        //        openFileDialog.Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
-
-        //        openFileDialog.Multiselect = false;
-
-        //        if (openFileDialog.ShowDialog() == DialogResult.OK)
-        //        {
-        //            string selectedFilePath = openFileDialog.FileName;
-        //            LanTextBx.Text = selectedFilePath;
-
-        //        }
-        //    }
-
-
-        //}
+        
         private void LangBtn_Click(object sender, EventArgs e)
             => BrowseFile(LanTextBx, "Select Language Excel File",
                 "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|All Files (*.*)|*.*");
@@ -520,21 +435,7 @@ namespace WindowsFormsApp1
             ErrorLogger.ErrorLogged -= OnErrorLogged; // Unsubscribe!
             base.OnFormClosed(e);
         }
-        //private void btn_IbcFiles_Click(object sender, EventArgs e)
-        //{
-        //    using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-        //    {
-        //        folderDialog.Description = "Select a Folder";
-        //        folderDialog.ShowNewFolderButton = true;
-
-        //        if (folderDialog.ShowDialog() == DialogResult.OK)
-        //        {
-        //            txtIBCFile.Text = folderDialog.SelectedPath;
-        //        }
-        //    }
-        //    BrowseFolder(txtIBCFile, "Select IBC Folder");
-
-        //}
+        
         private void btn_IbcFiles_Click(object sender, EventArgs e)
             => BrowseFolder(txtIBCFile, "Select IBC Folder");
 
@@ -553,14 +454,19 @@ namespace WindowsFormsApp1
             using (FolderBrowserDialog dlg = new FolderBrowserDialog())
             {
                 dlg.Description = "Select your GuideProject workspace (root) folder";
-                dlg.ShowNewFolderButton = false;
+                dlg.ShowNewFolderButton = true;
                 string startFolder = GetBestStartFolder(txt_workspace.Text);
                 dlg.SelectedPath = startFolder;
+                if (!string.IsNullOrWhiteSpace(txt_workspace.Text) && Directory.Exists(txt_workspace.Text))
+                {
+                    dlg.SelectedPath = txt_workspace.Text;
+                }
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     txt_workspace.Text = dlg.SelectedPath;
                     AutoFillFromWorkspace(dlg.SelectedPath);
+                    CreateWorkspaceFoldersAndAutoFill(dlg.SelectedPath);
                 }
             }
         }
@@ -610,7 +516,7 @@ namespace WindowsFormsApp1
             }
 
             // ── CSV/Excel: search Content\ for first .csv, fallback to .xlsx ──
-            string contentFolder = System.IO.Path.Combine(root, "Content");
+            string contentFolder = System.IO.Path.Combine(root, "Contents");
             string contentFile = FindFirstFile(contentFolder, "*.xlsx", "*.xls");
             if (contentFile != null)
             {
@@ -719,6 +625,120 @@ namespace WindowsFormsApp1
                     targetTextBox.Text = openFileDialog.FileName;
                 }
             }
+        }
+        private void CreateWorkspaceFoldersAndAutoFill(string parentFolder)
+        {
+            if (string.IsNullOrWhiteSpace(parentFolder))
+            {
+                txt_userMessage.Text = "Parent folder path is empty.";
+                return;
+            }
+
+            Directory.CreateDirectory(parentFolder);
+
+            string templateFolder = System.IO.Path.Combine(parentFolder, "Template");
+            string audioFolder = System.IO.Path.Combine(parentFolder, "Audio Files");
+            string languageFolder = System.IO.Path.Combine(parentFolder, "Language");
+            string contentsFolder = System.IO.Path.Combine(parentFolder, "Contents");
+            string outputFolder = System.IO.Path.Combine(parentFolder, "OutPut");
+            string ibsFolder = System.IO.Path.Combine(parentFolder, "IBS Files");
+
+            // Create folders if missing
+            Directory.CreateDirectory(templateFolder);
+            Directory.CreateDirectory(audioFolder);
+            Directory.CreateDirectory(languageFolder);
+            Directory.CreateDirectory(contentsFolder);
+            Directory.CreateDirectory(outputFolder);
+            Directory.CreateDirectory(ibsFolder);
+
+            // Fill folder textboxes
+            txt_template.Text = templateFolder;
+            txt_audioFile.Text = audioFolder;
+            txt_outputLocation.Text = outputFolder;
+            txtIBCFile.Text = ibsFolder;
+
+            // Try to find files
+            string languageFile = FindFirstFile(languageFolder, new[] { "*.xlsx", "*.xls", "*.csv" });
+            string contentFile = FindFirstFile(contentsFolder, new[] { "*.csv", "*.xlsx", "*.xls" }, excludeLanguageFiles: true);
+
+            LanTextBx.Text = languageFile ?? languageFolder;
+            txt_FilePath.Text = contentFile ?? contentsFolder;
+
+            SaveCurrentPaths();
+
+            ShowWorkspaceStatus(parentFolder, templateFolder, audioFolder, languageFolder, contentsFolder, outputFolder, ibsFolder, languageFile, contentFile);
+        }
+        private string FindFirstFile(string folderPath, string[] patterns, bool excludeLanguageFiles = false)
+        {
+            if (!Directory.Exists(folderPath))
+                return null;
+
+            foreach (var pattern in patterns)
+            {
+                var files = Directory.GetFiles(folderPath, pattern, SearchOption.TopDirectoryOnly);
+
+                foreach (var file in files)
+                {
+                    string fileName = System.IO.Path.GetFileName(file);
+
+                    if (excludeLanguageFiles &&
+                        fileName.IndexOf("language", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        continue;
+                    }
+
+                    return file;
+                }
+            }
+
+            return null;
+        }
+
+        private void SaveCurrentPaths()
+        {
+            Properties.Settings.Default.TemplatePath = txt_template.Text?.Trim() ?? "";
+            Properties.Settings.Default.AudioDataPath = txt_audioFile.Text?.Trim() ?? "";
+            Properties.Settings.Default.CsvFilePath = txt_FilePath.Text?.Trim() ?? "";
+            Properties.Settings.Default.ExcelLanguage = LanTextBx.Text?.Trim() ?? "";
+            Properties.Settings.Default.OutPutPath = txt_outputLocation.Text?.Trim() ?? "";
+            Properties.Settings.Default.OutPutIbcFile = txtIBCFile.Text?.Trim() ?? "";
+            Properties.Settings.Default.Save();
+        }
+
+        private void ShowWorkspaceStatus(
+            string parentFolder,
+            string templateFolder,
+            string audioFolder,
+            string languageFolder,
+            string contentsFolder,
+            string outputFolder,
+            string ibsFolder,
+            string languageFile,
+            string contentFile)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("Workspace prepared successfully:");
+            sb.AppendLine($"✔ Parent Folder   : {parentFolder}");
+            sb.AppendLine($"✔ Template Folder : {templateFolder}");
+            sb.AppendLine($"✔ Audio Folder    : {audioFolder}");
+            sb.AppendLine($"✔ Language Folder : {languageFolder}");
+            sb.AppendLine($"✔ Contents Folder : {contentsFolder}");
+            sb.AppendLine($"✔ Output Folder   : {outputFolder}");
+            sb.AppendLine($"✔ IBS Folder      : {ibsFolder}");
+            sb.AppendLine();
+
+            if (!string.IsNullOrWhiteSpace(languageFile))
+                sb.AppendLine($"✔ Language File   : {languageFile}");
+            else
+                sb.AppendLine("⚠ Language folder created, but no language file found. Select manually.");
+
+            if (!string.IsNullOrWhiteSpace(contentFile))
+                sb.AppendLine($"✔ Content File    : {contentFile}");
+            else
+                sb.AppendLine("⚠ Contents folder created, but no CSV/Excel file found. Select manually.");
+
+            txt_userMessage.Text = sb.ToString();
         }
     }
 }
