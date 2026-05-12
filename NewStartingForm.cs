@@ -50,5 +50,11 @@ namespace WindowsFormsApp1
             DictionaryFiles DictionaryFiles = new DictionaryFiles();
             DictionaryFiles.Show();
         }
+
+        private void AudioQualityChecker_Click(object sender, EventArgs e)
+        {
+            AudioQualityChecker AQCForm = new AudioQualityChecker();
+            AQCForm.Show();
+        }
     }
 }

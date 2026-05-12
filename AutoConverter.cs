@@ -465,10 +465,277 @@ namespace WindowsFormsApp1
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     txt_workspace.Text = dlg.SelectedPath;
-                    AutoFillFromWorkspace(dlg.SelectedPath);
-                    CreateWorkspaceFoldersAndAutoFill(dlg.SelectedPath);
+                    LoadPathsFromContentPathInfoOrDefault(dlg.SelectedPath);
+                    //AutoFillFromWorkspace(dlg.SelectedPath);
+                    //CreateWorkspaceFoldersAndAutoFill(dlg.SelectedPath);
                 }
             }
+        }
+        private void LoadPathsFromContentPathInfoOrDefault(string parentFolder)
+        {
+            if (string.IsNullOrWhiteSpace(parentFolder))
+            {
+                txt_userMessage.Text = "Parent folder path is empty.";
+                return;
+            }
+
+            if (!Directory.Exists(parentFolder))
+            {
+                Directory.CreateDirectory(parentFolder);
+            }
+
+            string infoFile = System.IO.Path.Combine(parentFolder, "ContentPathInfo.txt");
+
+            List<string> pathsFromInfo = new List<string>();
+
+            bool contentInfoExists = File.Exists(infoFile);
+
+            if (contentInfoExists)
+            {
+                pathsFromInfo = File.ReadAllLines(infoFile)
+                    .Select(line => Regex.Replace(line.Trim(), @"^\d+\s*[\.\)]\s*", ""))
+                    .Where(line => !string.IsNullOrWhiteSpace(line))
+                    .ToList();
+            }
+
+            // If ContentPathInfo.txt exists, read by line index.
+            // If not exists, use default child folders.
+            string templatePath = GetSafePathByIndex(pathsFromInfo, parentFolder, 0, "Template");
+            string audioPath = GetSafePathByIndex(pathsFromInfo, parentFolder, 1, "Audio Files");
+            string languagePath = GetSafePathByIndex(pathsFromInfo, parentFolder, 2, "Language");
+            string contentPath = GetSafePathByIndex(pathsFromInfo, parentFolder, 3, "Contents");
+            string outputPath = GetSafePathByIndex(pathsFromInfo, parentFolder, 4, "Output");
+            string ibsPath = GetSafePathByIndex(pathsFromInfo, parentFolder, 5, "IBS Files");
+
+            // Important:
+            // Language and Content can be file path:
+            // D:\Phd\Doc3\Language\Language5.xlsx
+            // D:\Phd\Doc3\Contents\Content_Test.xlsx
+            string languageFolder = GetFolderFromFileOrFolderPath(languagePath);
+            string contentsFolder = GetFolderFromFileOrFolderPath(contentPath);
+
+            StringBuilder folderLog = new StringBuilder();
+
+            CreateFolderOnlyIfMissing(templatePath, "Template", folderLog);
+            CreateFolderOnlyIfMissing(audioPath, "Audio Files", folderLog);
+            CreateFolderOnlyIfMissing(languageFolder, "Language", folderLog);
+            CreateFolderOnlyIfMissing(contentsFolder, "Contents", folderLog);
+            CreateFolderOnlyIfMissing(outputPath, "Output", folderLog);
+            CreateFolderOnlyIfMissing(ibsPath, "IBS Files", folderLog);
+
+            // Fill folder textboxes
+            txt_template.Text = templatePath;
+            txt_audioFile.Text = audioPath;
+            txt_outputLocation.Text = outputPath;
+            txtIBCFile.Text = ibsPath;
+
+            // Fill language file textbox
+            string finalLanguageFile = "";
+
+            if (IsSupportedFilePath(languagePath) && File.Exists(languagePath))
+            {
+                finalLanguageFile = languagePath;
+            }
+            else
+            {
+                finalLanguageFile = FindFirstFile(languageFolder, new[] { "*.xlsx", "*.xls", "*.csv" });
+            }
+
+            LanTextBx.Text = !string.IsNullOrWhiteSpace(finalLanguageFile)
+                ? finalLanguageFile
+                : languageFolder;
+
+            // Fill content file textbox
+            string finalContentFile = "";
+
+            if (IsSupportedFilePath(contentPath) && File.Exists(contentPath))
+            {
+                finalContentFile = contentPath;
+            }
+            else
+            {
+                finalContentFile = FindFirstFile(contentsFolder, new[] { "*.csv", "*.xlsx", "*.xls" }, excludeLanguageFiles: true);
+            }
+
+            txt_FilePath.Text = !string.IsNullOrWhiteSpace(finalContentFile)
+                ? finalContentFile
+                : contentsFolder;
+
+            // Save settings
+            SaveCurrentPaths();
+
+            // Create or update ContentPathInfo.txt
+            SaveContentPathInfoFile(
+                infoFile,
+                txt_template.Text,
+                txt_audioFile.Text,
+                LanTextBx.Text,
+                txt_FilePath.Text,
+                txt_outputLocation.Text,
+                txtIBCFile.Text
+            );
+
+            // Show message
+            txt_userMessage.Clear();
+
+            if (contentInfoExists)
+                txt_userMessage.AppendText("ContentPathInfo.txt loaded successfully.\r\n\r\n");
+            else
+                txt_userMessage.AppendText("ContentPathInfo.txt not found. Default child folder information loaded.\r\n\r\n");
+
+            txt_userMessage.AppendText("Workspace prepared successfully:\r\n");
+            txt_userMessage.AppendText($"✔ Parent Folder   : {parentFolder}\r\n");
+            txt_userMessage.AppendText($"✔ Template Folder : {txt_template.Text}\r\n");
+            txt_userMessage.AppendText($"✔ Audio Folder    : {txt_audioFile.Text}\r\n");
+            txt_userMessage.AppendText($"✔ Language Path   : {LanTextBx.Text}\r\n");
+            txt_userMessage.AppendText($"✔ Content Path    : {txt_FilePath.Text}\r\n");
+            txt_userMessage.AppendText($"✔ Output Folder   : {txt_outputLocation.Text}\r\n");
+            txt_userMessage.AppendText($"✔ IBS Folder      : {txtIBCFile.Text}\r\n\r\n");
+
+            txt_userMessage.AppendText(folderLog.ToString());
+
+            if (!File.Exists(LanTextBx.Text))
+                txt_userMessage.AppendText("\r\n⚠ Language file not found. Please select language Excel manually.\r\n");
+
+            if (!File.Exists(txt_FilePath.Text))
+                txt_userMessage.AppendText("\r\n⚠ Content CSV/Excel file not found. Please select content file manually.\r\n");
+        }
+        private string GetSafePathByIndex(List<string> paths, string parentFolder, int index, string defaultFolderName)
+        {
+            string defaultPath = System.IO.Path.Combine(parentFolder, defaultFolderName);
+
+            if (paths == null || paths.Count <= index)
+            {
+                return defaultPath;
+            }
+
+            string pathFromFile = paths[index];
+
+            if (string.IsNullOrWhiteSpace(pathFromFile))
+            {
+                return defaultPath;
+            }
+
+            try
+            {
+                string fullParent = System.IO.Path.GetFullPath(parentFolder)
+                    .TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+
+                string fullPath = System.IO.Path.GetFullPath(pathFromFile);
+
+                // Prevent Doc1 parent + Doc3 child path mixing
+                if (!fullPath.StartsWith(fullParent, StringComparison.OrdinalIgnoreCase))
+                {
+                    return defaultPath;
+                }
+
+                return pathFromFile;
+            }
+            catch
+            {
+                return defaultPath;
+            }
+        }
+
+        private string GetFolderFromFileOrFolderPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return path;
+            }
+
+            if (IsSupportedFilePath(path))
+            {
+                return System.IO.Path.GetDirectoryName(path);
+            }
+
+            return path;
+        }
+
+        private bool IsSupportedFilePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return false;
+            }
+
+            string ext = System.IO.Path.GetExtension(path).ToLower();
+
+            return ext == ".xlsx" ||
+                   ext == ".xls" ||
+                   ext == ".csv";
+        }
+
+        private bool CreateFolderOnlyIfMissing(string folderPath, string folderLabel, StringBuilder log)
+        {
+            if (string.IsNullOrWhiteSpace(folderPath))
+            {
+                log.AppendLine($"⚠ {folderLabel}: path is empty.");
+                return false;
+            }
+
+            if (Directory.Exists(folderPath))
+            {
+                log.AppendLine($"✓ {folderLabel}: already exists.");
+                return false;
+            }
+
+            Directory.CreateDirectory(folderPath);
+            log.AppendLine($"＋ {folderLabel}: created.");
+            return true;
+        }
+
+        private void SaveContentPathInfoFile(
+            string infoFile,
+            string templatePath,
+            string audioPath,
+            string languagePath,
+            string contentPath,
+            string outputPath,
+            string ibsPath)
+        {
+            string[] lines =
+            {
+        "1." + templatePath,
+        "2." + audioPath,
+        "3." + languagePath,
+        "4." + contentPath,
+        "5." + outputPath,
+        "6." + ibsPath
+    };
+
+            File.WriteAllLines(infoFile, lines, Encoding.UTF8);
+        }
+        private string GetPathByFolderName(List<string> paths, params string[] folderNames)
+        {
+            var targetKeys = folderNames
+                .Select(NormalizeFolderKey)
+                .ToList();
+
+            foreach (string path in paths)
+            {
+                string cleanPath = path.TrimEnd(
+                    System.IO.Path.DirectorySeparatorChar,
+                    System.IO.Path.AltDirectorySeparatorChar
+                );
+
+                string lastFolderName = System.IO.Path.GetFileName(cleanPath);
+                string key = NormalizeFolderKey(lastFolderName);
+
+                if (targetKeys.Contains(key))
+                    return cleanPath;
+            }
+
+            return null;
+        }
+
+        private string NormalizeFolderKey(string value)
+        {
+            return value
+                .Replace(" ", "")
+                .Replace("_", "")
+                .Replace("-", "")
+                .ToLower();
         }
         private void AutoFillFromWorkspace(string root)
         {
@@ -671,7 +938,9 @@ namespace WindowsFormsApp1
         private string FindFirstFile(string folderPath, string[] patterns, bool excludeLanguageFiles = false)
         {
             if (!Directory.Exists(folderPath))
+            {
                 return null;
+            }
 
             foreach (var pattern in patterns)
             {

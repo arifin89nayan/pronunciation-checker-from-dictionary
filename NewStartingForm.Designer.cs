@@ -33,6 +33,7 @@
             this.button3 = new System.Windows.Forms.Button();
             this.IbcFileCreate = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
+            this.AudioQualityChecker = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // AutoCon
@@ -68,7 +69,7 @@
             this.button3.BackColor = System.Drawing.Color.Red;
             this.button3.Font = new System.Drawing.Font("MS UI Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
             this.button3.ForeColor = System.Drawing.Color.White;
-            this.button3.Location = new System.Drawing.Point(923, 591);
+            this.button3.Location = new System.Drawing.Point(1048, 768);
             this.button3.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(208, 79);
@@ -103,10 +104,24 @@
             this.button2.UseVisualStyleBackColor = false;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
+            // AudioQualityChecker
+            // 
+            this.AudioQualityChecker.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
+            this.AudioQualityChecker.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.AudioQualityChecker.ForeColor = System.Drawing.Color.White;
+            this.AudioQualityChecker.Location = new System.Drawing.Point(330, 582);
+            this.AudioQualityChecker.Name = "AudioQualityChecker";
+            this.AudioQualityChecker.Size = new System.Drawing.Size(422, 138);
+            this.AudioQualityChecker.TabIndex = 15;
+            this.AudioQualityChecker.Text = "Audio Quality Checker";
+            this.AudioQualityChecker.UseVisualStyleBackColor = false;
+            this.AudioQualityChecker.Click += new System.EventHandler(this.AudioQualityChecker_Click);
+            // 
             // NewStartingForm
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.ClientSize = new System.Drawing.Size(1222, 737);
+            this.ClientSize = new System.Drawing.Size(1385, 942);
+            this.Controls.Add(this.AudioQualityChecker);
             this.Controls.Add(this.button2);
             this.Controls.Add(this.IbcFileCreate);
             this.Controls.Add(this.button3);
@@ -127,5 +142,6 @@
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Button IbcFileCreate;
         private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button AudioQualityChecker;
     }
 }
