@@ -388,9 +388,10 @@ namespace WindowsFormsApp1
 
         private void Back_button_Click(object sender, EventArgs e)
         {
-            NewStartingForm newStart = new NewStartingForm();            
-            newStart.Show();
-            this.Hide();
+            //NewStartingForm newStart = new NewStartingForm();            
+            //newStart.Show();
+            //this.Hide();
+            this.Close();
         }
 
         

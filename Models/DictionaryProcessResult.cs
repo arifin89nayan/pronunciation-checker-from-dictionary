@@ -19,5 +19,7 @@ namespace WindowsFormsApp1.Models
         public string LogFilePath { get; set; }
         public string CleanedExcelPath { get; set; }
         public string XmlFilePath { get; set; }
+        public int DuplicateGroups { get; set; }
+        public int ConflictDuplicates { get; set; }
     }
 }

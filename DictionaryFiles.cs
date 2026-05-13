@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1.Models;
-using WindowsFormsApp1.Services;
 
 namespace WindowsFormsApp1
 {
@@ -46,7 +39,7 @@ namespace WindowsFormsApp1
                         
                     }
                     // Create original backup
-                    CreateOriginalCopy(selectedFilePath, folderPath);
+                    //CreateOriginalCopy(selectedFilePath, folderPath);
                 }
             }
         }
@@ -133,7 +126,7 @@ namespace WindowsFormsApp1
                 AppendLog($"📂 Output Path : {outputFolderPath}");
                 AppendLog("");
 
-                var service = new DictionaryProcessService(AppendLog);
+                var service = new DictionaryProcessServiceUpdated(AppendLog);
 
                 AppendLog("🔄 Processing dictionary file...");
 

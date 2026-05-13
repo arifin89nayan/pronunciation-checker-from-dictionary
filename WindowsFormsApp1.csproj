@@ -241,6 +241,7 @@
     <Compile Include="Services\ContentNameGeneratorService.cs" />
     <Compile Include="Services\AutoConfigGeneratorParserFactory.cs" />
     <Compile Include="Services\DictionaryProcessService.cs" />
+    <Compile Include="Services\DictionaryProcessServiceUpdated.cs" />
     <Compile Include="Services\DictionaryVerifierService.cs" />
     <Compile Include="Services\ErrorLogger.cs" />
     <Compile Include="Services\FileService.cs" />

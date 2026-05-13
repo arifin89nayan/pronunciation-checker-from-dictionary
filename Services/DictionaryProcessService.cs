@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using WindowsFormsApp1.Helper;
 using WindowsFormsApp1.Models;
 
 namespace WindowsFormsApp1.Services
@@ -29,7 +30,127 @@ namespace WindowsFormsApp1.Services
                 _logLines.Add(line);
             }
         }
+        //public DictionaryProcessResult ProcessDictionaryFile(string inputFilePath, string outputFolderPath)
+        //{
+        //    var result = new DictionaryProcessResult();
 
+        //    string inputFolder = Path.GetDirectoryName(inputFilePath);
+        //    string fileNameWithoutExt = Path.GetFileNameWithoutExtension(inputFilePath);
+        //    string extension = Path.GetExtension(inputFilePath);
+
+        //    // Final paths
+        //    string backupFilePath = Path.Combine(inputFolder, fileNameWithoutExt + ".bak");
+        //    string cleanedExcelPath = inputFilePath; // overwrite original Excel
+        //    string tempCleanedExcelPath = Path.Combine(
+        //        inputFolder,
+        //        fileNameWithoutExt + "_temp_clean_" + Guid.NewGuid().ToString("N") + extension
+        //    );
+
+        //    string logFilePath = Path.Combine(inputFolder, fileNameWithoutExt + ".log");
+        //    string xmlFilePath = Path.Combine(inputFolder, fileNameWithoutExt + ".xml");
+
+        //    try
+        //    {
+        //        // 1. Backup old/original file before modifying
+        //        File.Copy(inputFilePath, backupFilePath, true);
+        //        _log($"Backup saved: {backupFilePath}");
+
+        //        // 2. Read original file
+        //        var rows = ReadDictionaryRows(inputFilePath);
+        //        result.TotalRows = rows.Count;
+
+        //        _log("Reading rows from dictionary file...");
+        //        foreach (var row in rows)
+        //        {
+        //            _log($"Row {row.RowNumber}: Word='{row.Word}', Phoneme='{row.Phoneme}'");
+        //        }
+
+        //        _log("");
+        //        _log("Validating rows...");
+
+        //        foreach (var row in rows)
+        //        {
+        //            if (string.IsNullOrWhiteSpace(row.Word))
+        //            {
+        //                row.Status = "Invalid - Word empty";
+        //                result.InvalidRows++;
+        //                _log($"Row {row.RowNumber}: Invalid - Word is empty");
+        //                continue;
+        //            }
+
+        //            if (string.IsNullOrWhiteSpace(row.Phoneme))
+        //            {
+        //                row.Status = "Invalid - Phoneme empty";
+        //                result.InvalidRows++;
+        //                _log($"Row {row.RowNumber}: Invalid - Phoneme is empty");
+        //                continue;
+        //            }
+
+        //            row.Word = NormalizeKey(row.Word);
+        //            row.Phoneme = NormalizePhoneme(row.Phoneme);
+        //            row.Status = "Valid";
+        //            result.ValidRows++;
+        //            _log($"Row {row.RowNumber}: OK");
+        //        }
+
+        //        _log("");
+        //        _log("Checking duplicates...");
+
+        //        var validRows = rows.Where(r => r.Status == "Valid").ToList();
+        //        var duplicateGroups = FindDuplicates(validRows);
+
+        //        result.DuplicateGroups = duplicateGroups.Count;
+        //        result.ConflictDuplicates = duplicateGroups.Count(d => d.HasConflict);
+
+        //        foreach (var dup in duplicateGroups)
+        //        {
+        //            _log($"Duplicate Word Found: {dup.Word}");
+
+        //            foreach (var item in dup.Rows)
+        //            {
+        //                _log($"   Row {item.RowNumber} -> {item.Word} = {item.Phoneme}");
+        //            }
+
+        //            if (dup.HasConflict)
+        //                _log("   Type: Conflict duplicate (same word, different phoneme)");
+        //            else
+        //                _log("   Type: Exact duplicate");
+
+        //            _log("");
+        //        }
+
+        //        // 3. Save cleaned file to temp first
+        //        _log("Creating cleaned Excel file...");
+        //        SaveCleanedExcelFromList(inputFilePath, tempCleanedExcelPath, rows, duplicateGroups);
+
+        //        // 4. Replace old Excel with cleaned Excel
+        //        File.Copy(tempCleanedExcelPath, cleanedExcelPath, true);
+        //        _log($"Original Excel updated: {cleanedExcelPath}");
+
+        //        // 5. Create log file
+        //        _log("Creating log file...");
+        //        SaveLogFile(logFilePath, rows, duplicateGroups, result);
+        //        _log($"Log file saved: {logFilePath}");
+
+        //        // 6. Generate XML without Modified name
+        //        _log("Generating XML dictionary...");
+        //        GenerateLexiconXmlFromList(rows, xmlFilePath);
+        //        _log($"XML file saved: {xmlFilePath}");
+
+        //        result.LogFilePath = logFilePath;
+        //        result.CleanedExcelPath = cleanedExcelPath;
+        //        result.XmlFilePath = xmlFilePath;
+
+        //        return result;
+        //    }
+        //    finally
+        //    {
+        //        if (File.Exists(tempCleanedExcelPath))
+        //        {
+        //            File.Delete(tempCleanedExcelPath);
+        //        }
+        //    }
+        //}
         public DictionaryProcessResult ProcessDictionaryFile(string inputFilePath, string outputFolderPath)
         {
             var result = new DictionaryProcessResult();
