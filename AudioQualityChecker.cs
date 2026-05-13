@@ -75,10 +75,10 @@ namespace WindowsFormsApp1
 
             string azureKey = "7e3b899567c24c67adf484f14ea0b0e5";
             string azureRegion = "japaneast";
-            string openAiKey = "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";
+           //string openAiKey = "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";
 
 
-            var openAiService = new OpenAiTranscriptionService(openAiKey);
+            //var openAiService = new OpenAiTranscriptionService(openAiKey);
             var dictionaryService = new DictionaryVerifierService();
             var azureService = new AzurePronunciationAssessmentService(
                 azureKey,
