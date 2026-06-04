@@ -95,11 +95,51 @@ namespace WindowsFormsApp1
                 CopyDirectory(subDir.FullName, newDestDir, overwrite);
             }
         }
+        private void SaveContentPathInfoFromTextBoxes()
+        {
+            string parentFolder = txt_workspace.Text?.Trim();
 
-       
+            if (string.IsNullOrWhiteSpace(parentFolder))
+            {
+                txt_userMessage.AppendText("⚠ Parent folder is empty. ContentPathInfo.txt not saved.\r\n");
+                return;
+            }
+
+            if (!Directory.Exists(parentFolder))
+            {
+                txt_userMessage.AppendText("⚠ Parent folder does not exist. ContentPathInfo.txt not saved.\r\n");
+                return;
+            }
+
+            string infoFilePath = System.IO.Path.Combine(parentFolder, "ContentPathInfo.txt");
+
+            string templatePath = txt_template.Text?.Trim() ?? "";
+            string audioPath = txt_audioFile.Text?.Trim() ?? "";
+            string languagePath = LanTextBx.Text?.Trim() ?? "";
+            string contentPath = txt_FilePath.Text?.Trim() ?? "";
+            string outputPath = txt_outputLocation.Text?.Trim() ?? "";
+            string ibsPath = txtIBCFile.Text?.Trim() ?? "";
+
+            string[] lines =
+            {
+        "1." + templatePath,
+        "2." + audioPath,
+        "3." + languagePath,
+        "4." + contentPath,
+        "5." + outputPath,
+        "6." + ibsPath
+    };
+
+            File.WriteAllLines(infoFilePath, lines, Encoding.UTF8);
+
+            txt_userMessage.AppendText($"ContentPathInfo.txt saved successfully:\r\n{infoFilePath}\r\n");
+        }
+
         private async void button2_Click(object sender, EventArgs e)
         {
-            txt_userMessage.Clear(); 
+            txt_userMessage.Clear();
+            SaveCurrentPaths();
+            SaveContentPathInfoFromTextBoxes();
             string templatepath = txt_template.Text.Trim() ?? "";
             Properties.Settings.Default.TemplatePath = templatepath;
             Properties.Settings.Default.Save();
@@ -388,6 +428,8 @@ namespace WindowsFormsApp1
 
         private void Back_button_Click(object sender, EventArgs e)
         {
+            SaveCurrentPaths();
+            SaveContentPathInfoFromTextBoxes();
             //NewStartingForm newStart = new NewStartingForm();            
             //newStart.Show();
             //this.Hide();

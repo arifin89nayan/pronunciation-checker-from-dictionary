@@ -185,7 +185,8 @@
             this.AQCBTN.TabIndex = 69;
             this.AQCBTN.Text = "Convert";
             this.AQCBTN.UseVisualStyleBackColor = false;
-            this.AQCBTN.Click += new System.EventHandler(this.AQCBTN_ClickAsync);
+            //this.AQCBTN.Click += new System.EventHandler(this.AQCBTN_ClickAsync);
+            this.AQCBTN.Click += new System.EventHandler(this.AQCBTN_Click);
             //this.AQCBTN.Click += async (s, e) => await this.AQCBTN_ClickAsync(s, e);
             // 
             // AudioQualityChecker

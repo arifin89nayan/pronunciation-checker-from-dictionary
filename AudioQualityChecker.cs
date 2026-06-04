@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsFormsApp1.Models;
 using WindowsFormsApp1.Services;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace WindowsFormsApp1
 {
@@ -28,24 +21,35 @@ namespace WindowsFormsApp1
             this.Hide();
         }
 
-        private async void AQCBTN_ClickAsync(object sender, EventArgs e)
+        // IMPORTANT:
+        // WinForms event handler must be void / async void.
+        // Do not use Task as direct button event return type.
+        private async void AQCBTN_Click(object sender, EventArgs e)
         {
             try
             {
                 AQCBTN.Enabled = false;
-                await AQCBTN_ClickCoreAsync(sender, e);
+                Cursor = Cursors.WaitCursor;
+
+                await AQCBTN_ClickCoreAsync();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Audio quality check failed: " + ex.Message);
+                MessageBox.Show(
+                    "Audio quality check failed: " + ex.Message,
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
             }
             finally
             {
+                Cursor = Cursors.Default;
                 AQCBTN.Enabled = true;
             }
         }
 
-        private async Task AQCBTN_ClickCoreAsync(object sender, EventArgs e)
+        private async Task AQCBTN_ClickCoreAsync()
         {
             txt_ConvertMessage.Clear();
 
@@ -72,45 +76,47 @@ namespace WindowsFormsApp1
             }
 
             txt_ConvertMessage.AppendText("Starting audio quality check...\r\n");
+            txt_ConvertMessage.AppendText("Whisper transcription is running. Please wait...\r\n");
 
-            string azureKey = "7e3b899567c24c67adf484f14ea0b0e5";
-            string azureRegion = "japaneast";
-           //string openAiKey = "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";
-
-
-            //var openAiService = new OpenAiTranscriptionService(openAiKey);
-            var dictionaryService = new DictionaryVerifierService();
-            var azureService = new AzurePronunciationAssessmentService(
-                azureKey,
-                azureRegion
+            string modelPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "Models",
+                "ggml-large-v3-turbo.bin"
             );
+            if (!File.Exists(modelPath))
+            {
+                MessageBox.Show(
+                    "Whisper model file not found.\r\n\r\n" +
+                    "Please put the model file here:\r\n" +
+                    modelPath,
+                    "Missing Whisper Model",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+                return;
+            }
 
-            var azureSttService = new AzureSpeechToTextService(
-                azureKey,
-                azureRegion
-            );
+                var whisperService = new WhisperNetSpeechToTextService(modelPath);
 
+            var engine = new AudioQualityEngine(whisperService);
 
+            AudioQualityFinalResult result = await Task.Run(async () =>
+            {
+                return await engine.CheckAsync(
+                    mp3Path,
+                    originalText,
+                    dictionaryXmlPath,
+                    "ja-JP"
+                );
+            });
 
-            var engine = new AudioQualityEngine(
-                azureService,
-                azureSttService,
-                dictionaryService
-            );
-
-            var result = await engine.CheckAsync(
-                mp3Path,
-                originalText,
-                dictionaryXmlPath,
-                "ja-JP"
-            );
-
-
-
-            txt_ConvertMessage.AppendText("Final Result: " + result.FinalGrade + "\r\n");
+            txt_ConvertMessage.AppendText("\r\nFinal Result: " + result.FinalGrade + "\r\n");
             txt_ConvertMessage.AppendText(result.Message + "\r\n");
 
-            await Task.CompletedTask;
+            txt_ConvertMessage.AppendText("\r\nCER: " + result.CerPercent.ToString("0.00") + "%\r\n");
+
+            txt_ConvertMessage.AppendText("\r\n--- Whisper Recognized Text ---\r\n");
+            txt_ConvertMessage.AppendText(result.RecognizedText + "\r\n");
         }
 
         private void AudioSelect_Click(object sender, EventArgs e)
@@ -118,6 +124,7 @@ namespace WindowsFormsApp1
             using (OpenFileDialog dlg = new OpenFileDialog())
             {
                 dlg.Filter = "MP3 Files (*.mp3)|*.mp3|All Files (*.*)|*.*";
+
                 if (dlg.ShowDialog() == DialogResult.OK)
                     txt_AudioSelect.Text = dlg.FileName;
             }
@@ -128,6 +135,7 @@ namespace WindowsFormsApp1
             using (OpenFileDialog dlg = new OpenFileDialog())
             {
                 dlg.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
+
                 if (dlg.ShowDialog() == DialogResult.OK)
                     txt_XMLFile.Text = dlg.FileName;
             }
