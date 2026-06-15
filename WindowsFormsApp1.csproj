@@ -455,6 +455,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <None Include="readme.md" />
+    <None Include="Resources\fixed_list.xlsx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
