@@ -187,6 +187,8 @@
     <Compile Include="ChatGptAPI.Designer.cs">
       <DependentUpon>ChatGptAPI.cs</DependentUpon>
     </Compile>
+    <Compile Include="Core\AppConfig.cs" />
+    <Compile Include="Core\AppState.cs" />
     <Compile Include="DictionaryFiles.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -200,12 +202,6 @@
     <Compile Include="Exceptions\InvalidPlayConfigException.cs" />
     <Compile Include="Exceptions\InvalidWidgetTypeException.cs" />
     <Compile Include="Exceptions\UnprocessableLineException.cs" />
-    <Compile Include="AudioQualityChecker.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="AudioQualityChecker.Designer.cs">
-      <DependentUpon>AudioQualityChecker.cs</DependentUpon>
-    </Compile>
     <Compile Include="Global\GlobalConfigPropreties.cs" />
     <Compile Include="Global\GlobalProperties.cs" />
     <Compile Include="Helper\Mapper\Template2CsvFileParserMapper.cs" />
@@ -223,6 +219,7 @@
     <Compile Include="Models\DictionaryRowModel.cs" />
     <Compile Include="Models\DuplicateGroupModel.cs" />
     <Compile Include="Models\ParseSelectionMetadata.cs" />
+    <Compile Include="Models\TtsModels.cs" />
     <Compile Include="Models\Widgets\WidgetContainer.cs" />
     <Compile Include="NewStartingForm.cs">
       <SubType>Form</SubType>
@@ -244,8 +241,10 @@
     <Compile Include="Services\AudioQualityEngine.cs" />
     <Compile Include="Services\AzurePronunciationAssessmentService.cs" />
     <Compile Include="Services\AzureSpeechToTextService.cs" />
+    <Compile Include="Services\AzureTtsService.cs" />
     <Compile Include="Services\CaptionFormService.cs" />
     <Compile Include="Services\CaptionWidgetProcessor.cs" />
+    <Compile Include="Services\ConfirmationListStore.cs" />
     <Compile Include="Services\ContentNameGeneratorService.cs" />
     <Compile Include="Services\AutoConfigGeneratorParserFactory.cs" />
     <Compile Include="Services\DictionaryProcessService.cs" />
@@ -253,11 +252,14 @@
     <Compile Include="Services\DictionaryVerifierService.cs" />
     <Compile Include="Services\ErrorLogger.cs" />
     <Compile Include="Services\FileService.cs" />
+    <Compile Include="Services\FixedDictionaryService.cs" />
     <Compile Include="Services\FormService.cs" />
     <Compile Include="Services\GuideExcelFileParser.cs" />
+    <Compile Include="Services\KanjiExtractionService.cs" />
     <Compile Include="Services\LanguageExcelParser.cs" />
     <Compile Include="Services\Mp3ToWavConverter.cs" />
     <Compile Include="Services\OpenAiTranscriptionService.cs" />
+    <Compile Include="Services\QualityCheckService.cs" />
     <Compile Include="Services\QuizExcelFileParser.cs" />
     <Compile Include="Services\QuizWidgetProcessor.cs" />
     <Compile Include="Services\QuizCsvFileParser.cs" />
@@ -336,6 +338,61 @@
     <Compile Include="Template\PlayConfigTemplate.cs" />
     <Compile Include="Template\QuizPlayConfigTemplate.cs" />
     <Compile Include="Template\QuizPlayConfigTemplateV2.cs" />
+    <Compile Include="UIDesign\Screens\AzureTtsScreen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIDesign\Screens\AzureTtsScreen.Designer.cs">
+      <DependentUpon>AzureTtsScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\Screens\DashboardScreen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIDesign\Screens\DashboardScreen.Designer.cs">
+      <DependentUpon>DashboardScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\Screens\DictionaryManagerScreen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIDesign\Screens\DictionaryManagerScreen.Designer.cs">
+      <DependentUpon>DictionaryManagerScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\Screens\ExtractionResultScreen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIDesign\Screens\ExtractionResultScreen.Designer.cs">
+      <DependentUpon>ExtractionResultScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\Screens\HumanReviewScreen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIDesign\Screens\HumanReviewScreen.Designer.cs">
+      <DependentUpon>HumanReviewScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\Screens\ScriptInputScreen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIDesign\Screens\ScriptInputScreen.Designer.cs">
+      <DependentUpon>ScriptInputScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\Screens\TtsListScreen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIDesign\Screens\TtsListScreen.Designer.cs">
+      <DependentUpon>TtsListScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\Screens\VoiceCheckScreen.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UIDesign\Screens\VoiceCheckScreen.Designer.cs">
+      <DependentUpon>VoiceCheckScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UIDesign\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\Theme.cs" />
     <EmbeddedResource Include="AudioSetup.resx">
       <DependentUpon>AudioSetup.cs</DependentUpon>
     </EmbeddedResource>
@@ -350,9 +407,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DictionaryFiles.resx">
       <DependentUpon>DictionaryFiles.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="AudioQualityChecker.resx">
-      <DependentUpon>AudioQualityChecker.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="NewStartingForm.resx">
       <DependentUpon>NewStartingForm.cs</DependentUpon>
@@ -386,6 +440,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="QuizForm.resx">
       <DependentUpon>QuizForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UIDesign\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

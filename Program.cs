@@ -17,10 +17,14 @@ namespace WindowsFormsApp1
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            
+
             // Application.Run(new StartupForm());
-            //Application.Run(new Form3());
+            //Application.Run(new TestMain());
+            //AppConfig config = AppConfig.Load();
+            //AppState state = new AppState(config);
+            //Application.Run(new MainForm(state));
             Application.Run(new NewStartingForm());
+
         }
     }
 }

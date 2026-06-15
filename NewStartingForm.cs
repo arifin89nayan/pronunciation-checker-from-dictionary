@@ -53,8 +53,23 @@ namespace WindowsFormsApp1
 
         private void AudioQualityChecker_Click(object sender, EventArgs e)
         {
-            AudioQualityChecker AQCForm = new AudioQualityChecker();
-            AQCForm.Show();
+            //AppConfig config = AppConfig.Load();
+            //AppState state = new AppState(config);
+            //MainForm uiMain = new MainForm();
+            //uiMain.Show();
+            AppConfig config = AppConfig.Load();
+            AppState state = new AppState(config);
+
+            MainForm uiMain = new MainForm(state); // important
+
+            this.Hide();
+
+            uiMain.FormClosed += delegate
+            {
+                this.Close();
+            };
+
+            uiMain.Show();
         }
     }
 }
