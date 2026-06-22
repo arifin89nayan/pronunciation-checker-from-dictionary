@@ -109,7 +109,7 @@
             this.btnExtract.Name = "btnExtract";
             this.btnExtract.Location = new System.Drawing.Point(20, 364);
             this.btnExtract.Size = new System.Drawing.Size(160, 32);
-            this.btnExtract.Text = "Extract Kanji Words";
+            this.btnExtract.Text = "Start Processing";
             this.btnExtract.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
             this.btnExtract.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnExtract.BackColor = System.Drawing.Color.FromArgb(199, 62, 58);
