@@ -80,8 +80,5 @@
     <Setting Name="txt_workspace" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="OPENAI_API_KEY" Type="System.String" Scope="User">
-      <Value Profile="(Default)">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</Value>
-    </Setting>
   </Settings>
 </SettingsFile>

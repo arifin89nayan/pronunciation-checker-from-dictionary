@@ -1,5 +1,8 @@
-﻿using System;
+﻿using DotNetEnv; // Add this using directive at the top with the others
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +19,7 @@ namespace WindowsFormsApp1
         [STAThread]
         static void Main()
         {
+            
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
