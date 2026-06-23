@@ -149,7 +149,8 @@ namespace WindowsFormsApp1.UIDesign
 
             public async Task<List<KanjiItem>> ExtractKanjiAsync(string inputText, List<FixedWord> fixedWords)
             {
-                string apiKey = Properties.Settings.Default.OPENAI_API_KEY;
+                //string apiKey = Properties.Settings.Default.OPENAI_API_KEY;
+                string apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
 
                 if (string.IsNullOrWhiteSpace(apiKey))
                     throw new Exception("OPENAI_API_KEY is missing. Please set it in Windows environment variables.");
