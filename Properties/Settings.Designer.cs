@@ -335,5 +335,19 @@ namespace WindowsFormsApp1.Properties {
                 this["txt_workspace"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("sk-proj-4EbkFrEvs3l12UXk0DdP6803kr9ho6fXDA-mkp_r1pExS7RBEdIBTIghBRHHh5eGtP0iuuml7" +
+            "JT3BlbkFJisNJ6AJRExO2MJEWz-3DMDA5GhtQDy68yyK4uxB2yEa2b37M6wH0V3bh7CabWAl0wJa3ewb" +
+            "C4A")]
+        public string OPENAI_API_KEY {
+            get {
+                return ((string)(this["OPENAI_API_KEY"]));
+            }
+            set {
+                this["OPENAI_API_KEY"] = value;
+            }
+        }
     }
 }

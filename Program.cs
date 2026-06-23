@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WindowsFormsApp1.UIDesign;
 
 namespace WindowsFormsApp1
 {
@@ -18,12 +19,12 @@ namespace WindowsFormsApp1
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            // Application.Run(new StartupForm());
+            //Application.Run(new MainForm());
             //Application.Run(new TestMain());
             //AppConfig config = AppConfig.Load();
             //AppState state = new AppState(config);
-            //Application.Run(new MainForm(state));
-            Application.Run(new NewStartingForm());
+            Application.Run(new Inputtext());
+            //Application.Run(new NewStartingForm());
 
         }
     }

@@ -96,6 +96,9 @@
     <Reference Include="NAudio.WinMM, Version=2.2.1.0, Culture=neutral, PublicKeyToken=e279aa5131008a41, processorArchitecture=MSIL">
       <HintPath>packages\NAudio.WinMM.2.2.1\lib\netstandard2.0\NAudio.WinMM.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="office, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -338,6 +341,18 @@
     <Compile Include="Template\PlayConfigTemplate.cs" />
     <Compile Include="Template\QuizPlayConfigTemplate.cs" />
     <Compile Include="Template\QuizPlayConfigTemplateV2.cs" />
+    <Compile Include="UIDesign\Inputtext.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UIDesign\Inputtext.Designer.cs">
+      <DependentUpon>Inputtext.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UIDesign\KanjiReview.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UIDesign\KanjiReview.Designer.cs">
+      <DependentUpon>KanjiReview.cs</DependentUpon>
+    </Compile>
     <Compile Include="UIDesign\Screens\AzureTtsScreen.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -440,6 +455,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="QuizForm.resx">
       <DependentUpon>QuizForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UIDesign\Inputtext.resx">
+      <DependentUpon>Inputtext.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UIDesign\KanjiReview.resx">
+      <DependentUpon>KanjiReview.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UIDesign\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
