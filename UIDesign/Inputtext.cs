@@ -24,7 +24,7 @@ namespace WindowsFormsApp1.UIDesign
         public Inputtext()
         {
             InitializeComponent();
-             string ApiKey= Properties.Settings.Default.OPENAI_API_KEY;
+            
 
            // StartExractBtn.Click += StartExractBtn_Click;
 

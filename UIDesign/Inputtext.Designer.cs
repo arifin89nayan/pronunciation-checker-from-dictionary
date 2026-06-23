@@ -43,7 +43,7 @@
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("MS UI Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.label6.Location = new System.Drawing.Point(553, 972);
+            this.label6.Location = new System.Drawing.Point(549, 803);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(488, 48);
             this.label6.TabIndex = 56;
@@ -54,7 +54,7 @@
             this.Back_button.BackColor = System.Drawing.Color.Red;
             this.Back_button.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Back_button.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.Back_button.Location = new System.Drawing.Point(894, 835);
+            this.Back_button.Location = new System.Drawing.Point(890, 666);
             this.Back_button.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.Back_button.Name = "Back_button";
             this.Back_button.Size = new System.Drawing.Size(193, 98);
@@ -69,7 +69,7 @@
             this.Txt_Input.Location = new System.Drawing.Point(87, 107);
             this.Txt_Input.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.Txt_Input.Name = "Txt_Input";
-            this.Txt_Input.Size = new System.Drawing.Size(1518, 472);
+            this.Txt_Input.Size = new System.Drawing.Size(1518, 326);
             this.Txt_Input.TabIndex = 54;
             this.Txt_Input.Text = "";
             // 
@@ -78,7 +78,7 @@
             this.StartExractBtn.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(0)))));
             this.StartExractBtn.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.StartExractBtn.ForeColor = System.Drawing.Color.Black;
-            this.StartExractBtn.Location = new System.Drawing.Point(488, 835);
+            this.StartExractBtn.Location = new System.Drawing.Point(484, 666);
             this.StartExractBtn.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.StartExractBtn.Name = "StartExractBtn";
             this.StartExractBtn.Size = new System.Drawing.Size(360, 98);
@@ -100,17 +100,17 @@
             // Txt_Msg
             // 
             this.Txt_Msg.Font = new System.Drawing.Font("MS UI Gothic", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
-            this.Txt_Msg.Location = new System.Drawing.Point(74, 1033);
+            this.Txt_Msg.Location = new System.Drawing.Point(80, 855);
             this.Txt_Msg.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.Txt_Msg.Name = "Txt_Msg";
-            this.Txt_Msg.Size = new System.Drawing.Size(1518, 371);
+            this.Txt_Msg.Size = new System.Drawing.Size(1518, 273);
             this.Txt_Msg.TabIndex = 58;
             this.Txt_Msg.Text = "";
             // 
             // btn_FixedList
             // 
             this.btn_FixedList.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.btn_FixedList.Location = new System.Drawing.Point(1462, 749);
+            this.btn_FixedList.Location = new System.Drawing.Point(1458, 580);
             this.btn_FixedList.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.btn_FixedList.Name = "btn_FixedList";
             this.btn_FixedList.Size = new System.Drawing.Size(130, 47);
@@ -123,7 +123,7 @@
             // 
             this.txt_FixedList.BackColor = System.Drawing.Color.White;
             this.txt_FixedList.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.txt_FixedList.Location = new System.Drawing.Point(84, 688);
+            this.txt_FixedList.Location = new System.Drawing.Point(80, 519);
             this.txt_FixedList.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
             this.txt_FixedList.Name = "txt_FixedList";
             this.txt_FixedList.Size = new System.Drawing.Size(1505, 44);
@@ -136,7 +136,7 @@
             this.label2.Cursor = System.Windows.Forms.Cursors.Default;
             this.label2.Font = new System.Drawing.Font("Times New Roman", 24F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label2.ForeColor = System.Drawing.Color.Black;
-            this.label2.Location = new System.Drawing.Point(81, 623);
+            this.label2.Location = new System.Drawing.Point(77, 454);
             this.label2.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(349, 55);
@@ -147,7 +147,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1814, 1545);
+            this.ClientSize = new System.Drawing.Size(1648, 1185);
             this.Controls.Add(this.btn_FixedList);
             this.Controls.Add(this.txt_FixedList);
             this.Controls.Add(this.label2);

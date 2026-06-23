@@ -49,7 +49,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1732, 1412);
+            this.ClientSize = new System.Drawing.Size(1380, 869);
             this.Controls.Add(this.label2);
             this.Name = "KanjiReview";
             this.Text = "KanjiReview";
