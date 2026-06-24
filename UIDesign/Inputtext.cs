@@ -50,6 +50,116 @@ namespace WindowsFormsApp1.UIDesign
             public string Difficulty { get; set; }
            
             public string Reason { get; set; }
+            public string Source { get; set; }          
+            public bool SaveToFixedList { get; set; }   
+        }
+        public List<KanjiItem> FindFixedWordsInText(string inputText, List<FixedWord> fixedWords)
+        {
+            var result = new List<KanjiItem>();
+
+            if (string.IsNullOrWhiteSpace(inputText) || fixedWords == null)
+                return result;
+
+            foreach (var fw in fixedWords.OrderByDescending(x => x.Word.Length))
+            {
+                if (string.IsNullOrWhiteSpace(fw.Word))
+                    continue;
+
+                if (inputText.Contains(fw.Word))
+                {
+                    result.Add(new KanjiItem
+                    {
+                        Word = fw.Word,
+                        Hiragana = NormalizeToHiragana(fw.Hiragana),
+                        Difficulty = string.IsNullOrWhiteSpace(fw.Difficulty) ? "fixed" : fw.Difficulty,
+                        Reason = "Found in Fixed List Excel. Fixed List reading has highest priority.",
+                        Source = "Fixed",
+                        SaveToFixedList = false
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        public List<KanjiItem> MergeFixedAndApiResults(
+            List<KanjiItem> fixedMatches,
+            List<KanjiItem> apiItems,
+            List<FixedWord> fixedWords)
+        {
+            var finalList = new List<KanjiItem>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+
+            var fixedDict = fixedWords
+                .Where(x => !string.IsNullOrWhiteSpace(x.Word))
+                .GroupBy(x => x.Word)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+
+            // 1. Fixed List always goes first
+            foreach (var item in fixedMatches)
+            {
+                if (seen.Add(item.Word))
+                    finalList.Add(item);
+            }
+
+            // 2. ChatGPT result is used only for new/non-fixed words
+            foreach (var item in apiItems ?? new List<KanjiItem>())
+            {
+                if (item == null || string.IsNullOrWhiteSpace(item.Word))
+                    continue;
+
+                if (fixedDict.TryGetValue(item.Word, out FixedWord fw))
+                {
+                    // If ChatGPT found a fixed word, keep Excel reading, not ChatGPT reading.
+                    if (seen.Add(item.Word))
+                    {
+                        finalList.Add(new KanjiItem
+                        {
+                            Word = fw.Word,
+                            Hiragana = NormalizeToHiragana(fw.Hiragana),
+                            Difficulty = string.IsNullOrWhiteSpace(fw.Difficulty) ? "fixed" : fw.Difficulty,
+                            Reason = "ChatGPT also found this, but Fixed List reading is used.",
+                            Source = "Fixed",
+                            SaveToFixedList = false
+                        });
+                    }
+
+                    continue;
+                }
+
+                item.Hiragana = NormalizeToHiragana(item.Hiragana);
+                item.Source = "ChatGPT";
+                item.SaveToFixedList = true;
+
+                if (string.IsNullOrWhiteSpace(item.Difficulty))
+                    item.Difficulty = "medium";
+
+                if (string.IsNullOrWhiteSpace(item.Reason))
+                    item.Reason = "New word suggested by ChatGPT. Human review required.";
+
+                if (seen.Add(item.Word))
+                    finalList.Add(item);
+            }
+
+            return finalList;
+        }
+
+        public static string NormalizeToHiragana(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return text;
+
+            var sb = new StringBuilder();
+
+            foreach (char c in text.Trim())
+            {
+                if (c >= '\u30A1' && c <= '\u30F6')
+                    sb.Append((char)(c - 0x60));
+                else
+                    sb.Append(c);
+            }
+
+            return sb.ToString();
         }
         private async void StartExractBtn_Click(object sender, EventArgs e)
         {
@@ -74,10 +184,37 @@ namespace WindowsFormsApp1.UIDesign
 
                 Log("Sending text to ChatGPT for kanji extraction...");
 
-                List<KanjiItem> kanjiList =
-                    await _agent.ExtractKanjiAsync(Txt_Input.Text.Trim(), fixedWords);
+                //List<KanjiItem> kanjiList =
+                //    await _agent.ExtractKanjiAsync(Txt_Input.Text.Trim(), fixedWords);
 
-                Log($"Extraction finished. Found {kanjiList.Count} kanji terms.");
+                //Log($"Extraction finished. Found {kanjiList.Count} kanji terms.");
+
+                //if (kanjiList.Count == 0)
+                //{
+                //    MessageBox.Show("No kanji terms found.");
+                //    return;
+                //}
+
+                //Log("Opening kanji review window...");
+
+                //KanjiReview popup = new KanjiReview(kanjiList);
+                //popup.ShowDialog();
+
+                //Log("Kanji review completed.");
+                string inputText = Txt_Input.Text.Trim();
+
+                List<KanjiItem> fixedMatches = FindFixedWordsInText(inputText, fixedWords);
+                Log($"Fixed words found in input text: {fixedMatches.Count}");
+
+                Log("Sending text to ChatGPT for kanji extraction...");
+
+                List<KanjiItem> apiItems =
+                    await _agent.ExtractKanjiAsync(inputText, fixedWords);
+
+                List<KanjiItem> kanjiList =
+                    MergeFixedAndApiResults(fixedMatches, apiItems, fixedWords);
+
+                Log($"Extraction finished. Total review terms: {kanjiList.Count}");
 
                 if (kanjiList.Count == 0)
                 {
@@ -87,10 +224,10 @@ namespace WindowsFormsApp1.UIDesign
 
                 Log("Opening kanji review window...");
 
-                KanjiReview popup = new KanjiReview(kanjiList);
+                KanjiReview popup = new KanjiReview(kanjiList, fixedListPath);
                 popup.ShowDialog();
 
-                Log("Kanji review completed.");
+                Log($"Kanji review completed. Saved/updated: {popup.SavedCount} word(s).");
             }
             catch (Exception ex)
             {
