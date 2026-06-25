@@ -1,32 +1,25 @@
-﻿using ClosedXML.Excel;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using static WindowsFormsApp1.UIDesign.Inputtext;
+using ClosedXML.Excel;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace WindowsFormsApp1.UIDesign
 {
     public partial class Inputtext : Form
     {
-        
         private readonly ScriptProcessingAgent _agent = new ScriptProcessingAgent();
 
         public Inputtext()
         {
             InitializeComponent();
-            
-
-           // StartExractBtn.Click += StartExractBtn_Click;
 
             txt_FixedList.Text = Path.Combine(
                 AppDomain.CurrentDomain.BaseDirectory,
@@ -34,6 +27,10 @@ namespace WindowsFormsApp1.UIDesign
                 "fixed_list.xlsx"
             );
         }
+
+        // ---------------------------------------------------------------
+        // Data models
+        // ---------------------------------------------------------------
 
         public class FixedWord
         {
@@ -45,122 +42,168 @@ namespace WindowsFormsApp1.UIDesign
         public class KanjiItem
         {
             public string Word { get; set; }
+
+            // Final reading used for TTS.
             public string Hiragana { get; set; }
-           
+
             public string Difficulty { get; set; }
-           
             public string Reason { get; set; }
-            public string Source { get; set; }          
-            public bool SaveToFixedList { get; set; }   
-        }
-        public List<KanjiItem> FindFixedWordsInText(string inputText, List<FixedWord> fixedWords)
-        {
-            var result = new List<KanjiItem>();
 
-            if (string.IsNullOrWhiteSpace(inputText) || fixedWords == null)
-                return result;
+            // Fixed / ChatGPT
+            public string Source { get; set; }
 
-            foreach (var fw in fixedWords.OrderByDescending(x => x.Word.Length))
-            {
-                if (string.IsNullOrWhiteSpace(fw.Word))
-                    continue;
+            // matched / new / conflict
+            public string DictionaryStatus { get; set; }
 
-                if (inputText.Contains(fw.Word))
-                {
-                    result.Add(new KanjiItem
-                    {
-                        Word = fw.Word,
-                        Hiragana = NormalizeToHiragana(fw.Hiragana),
-                        Difficulty = string.IsNullOrWhiteSpace(fw.Difficulty) ? "fixed" : fw.Difficulty,
-                        Reason = "Found in Fixed List Excel. Fixed List reading has highest priority.",
-                        Source = "Fixed",
-                        SaveToFixedList = false
-                    });
-                }
-            }
+            public bool ReviewRequired { get; set; }
 
-            return result;
+            // Only used when ChatGPT disagrees with Fixed List.
+            public string ModelHiragana { get; set; }
+
+            public bool SaveToFixedList { get; set; }
         }
 
-        public List<KanjiItem> MergeFixedAndApiResults(
-            List<KanjiItem> fixedMatches,
-            List<KanjiItem> apiItems,
-            List<FixedWord> fixedWords)
+        public class ApiKanjiItem
         {
-            var finalList = new List<KanjiItem>();
-            var seen = new HashSet<string>(StringComparer.Ordinal);
+            [JsonProperty("word")]
+            public string Word { get; set; }
 
-            var fixedDict = fixedWords
-                .Where(x => !string.IsNullOrWhiteSpace(x.Word))
-                .GroupBy(x => x.Word)
-                .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+            [JsonProperty("hiragana")]
+            public string Hiragana { get; set; }
 
-            // 1. Fixed List always goes first
-            foreach (var item in fixedMatches)
+            [JsonProperty("difficulty")]
+            public string Difficulty { get; set; }
+
+            [JsonProperty("reason")]
+            public string Reason { get; set; }
+        }
+
+        // ---------------------------------------------------------------
+        // Merge: Fixed Dictionary always wins, conflicts are flagged
+        // ---------------------------------------------------------------
+
+        private List<KanjiItem> MergeWithConflicts(
+            FixedDictionaryService matcher,
+            List<FixedWord> fixedMatches,
+            List<ApiKanjiItem> apiItems)
+        {
+            var byWord = new Dictionary<string, KanjiItem>(StringComparer.Ordinal);
+            var ordered = new List<KanjiItem>();
+
+            // 1. Fixed words found locally.
+            foreach (var fw in fixedMatches)
             {
-                if (seen.Add(item.Word))
-                    finalList.Add(item);
-            }
-
-            // 2. ChatGPT result is used only for new/non-fixed words
-            foreach (var item in apiItems ?? new List<KanjiItem>())
-            {
-                if (item == null || string.IsNullOrWhiteSpace(item.Word))
+                if (fw == null || string.IsNullOrWhiteSpace(fw.Word))
                     continue;
 
-                if (fixedDict.TryGetValue(item.Word, out FixedWord fw))
+                string key = JapaneseTextNormalizer.NormalizeText(fw.Word);
+
+                if (byWord.ContainsKey(key))
+                    continue;
+
+                var item = new KanjiItem
                 {
-                    // If ChatGPT found a fixed word, keep Excel reading, not ChatGPT reading.
-                    if (seen.Add(item.Word))
+                    Word = key,
+                    Hiragana = JapaneseTextNormalizer.ToHiragana(fw.Hiragana),
+                    Difficulty = string.IsNullOrWhiteSpace(fw.Difficulty) ? "fixed" : fw.Difficulty,
+                    Source = "Fixed",
+                    DictionaryStatus = "matched",
+                    ReviewRequired = false,
+                    Reason = "Found in Fixed Dictionary. Fixed reading is final.",
+                    SaveToFixedList = false,
+                    ModelHiragana = ""
+                };
+
+                byWord[key] = item;
+                ordered.Add(item);
+            }
+
+            // 2. ChatGPT output.
+            foreach (var api in apiItems ?? new List<ApiKanjiItem>())
+            {
+                if (api == null || string.IsNullOrWhiteSpace(api.Word))
+                    continue;
+
+                string key = JapaneseTextNormalizer.NormalizeText(api.Word);
+                string modelReading = JapaneseTextNormalizer.ToHiragana(api.Hiragana);
+
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+
+                FixedWord fw;
+
+                // If ChatGPT outputs something already in fixed dictionary,
+                // fixed dictionary reading wins.
+                if (matcher.TryGet(key, out fw))
+                {
+                    string fixedReading = JapaneseTextNormalizer.ToHiragana(fw.Hiragana);
+
+                    KanjiItem existing;
+
+                    if (!byWord.TryGetValue(key, out existing))
                     {
-                        finalList.Add(new KanjiItem
+                        existing = new KanjiItem
                         {
-                            Word = fw.Word,
-                            Hiragana = NormalizeToHiragana(fw.Hiragana),
+                            Word = key,
+                            Hiragana = fixedReading,
                             Difficulty = string.IsNullOrWhiteSpace(fw.Difficulty) ? "fixed" : fw.Difficulty,
-                            Reason = "ChatGPT also found this, but Fixed List reading is used.",
                             Source = "Fixed",
-                            SaveToFixedList = false
-                        });
+                            DictionaryStatus = "matched",
+                            ReviewRequired = false,
+                            Reason = "Found in Fixed Dictionary. Fixed reading is final.",
+                            SaveToFixedList = false,
+                            ModelHiragana = ""
+                        };
+
+                        byWord[key] = existing;
+                        ordered.Add(existing);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(modelReading) &&
+                        !JapaneseTextNormalizer.ReadingsEqual(fixedReading, modelReading))
+                    {
+                        existing.DictionaryStatus = "conflict";
+                        existing.ReviewRequired = true;
+                        existing.ModelHiragana = modelReading;
+                        existing.Reason =
+                            "CONFLICT: model suggested 「" + modelReading +
+                            "」 but Fixed Dictionary says 「" + fixedReading +
+                            "」. Fixed reading kept. Human review required.";
                     }
 
                     continue;
                 }
 
-                item.Hiragana = NormalizeToHiragana(item.Hiragana);
-                item.Source = "ChatGPT";
-                item.SaveToFixedList = true;
+                // 3. New unknown word.
+                if (byWord.ContainsKey(key))
+                    continue;
 
-                if (string.IsNullOrWhiteSpace(item.Difficulty))
-                    item.Difficulty = "medium";
+                var newItem = new KanjiItem
+                {
+                    Word = key,
+                    Hiragana = modelReading,
+                    Difficulty = string.IsNullOrWhiteSpace(api.Difficulty) ? "medium" : api.Difficulty,
+                    Source = "ChatGPT",
+                    DictionaryStatus = "new",
+                    ReviewRequired = true,
+                    Reason = string.IsNullOrWhiteSpace(api.Reason)
+                        ? "New word suggested by ChatGPT. Human review required before entering dictionary."
+                        : api.Reason,
+                    SaveToFixedList = true,
+                    ModelHiragana = modelReading
+                };
 
-                if (string.IsNullOrWhiteSpace(item.Reason))
-                    item.Reason = "New word suggested by ChatGPT. Human review required.";
-
-                if (seen.Add(item.Word))
-                    finalList.Add(item);
+                byWord[key] = newItem;
+                ordered.Add(newItem);
             }
 
-            return finalList;
+            return ordered;
         }
 
-        public static string NormalizeToHiragana(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return text;
+        // ---------------------------------------------------------------
+        // Start button
+        // ---------------------------------------------------------------
 
-            var sb = new StringBuilder();
-
-            foreach (char c in text.Trim())
-            {
-                if (c >= '\u30A1' && c <= '\u30F6')
-                    sb.Append((char)(c - 0x60));
-                else
-                    sb.Append(c);
-            }
-
-            return sb.ToString();
-        }
         private async void StartExractBtn_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(Txt_Input.Text))
@@ -174,47 +217,51 @@ namespace WindowsFormsApp1.UIDesign
                 StartExractBtn.Enabled = false;
                 Txt_Msg.Clear();
 
-                Log("Start processing...");
-                Log("Loading fixed list...");
-
                 string fixedListPath = txt_FixedList.Text.Trim();
-
-                List<FixedWord> fixedWords = _agent.LoadFixedList(fixedListPath);
-                Log($"Fixed list loaded: {fixedWords.Count} words.");
-
-                Log("Sending text to ChatGPT for kanji extraction...");
-
-                //List<KanjiItem> kanjiList =
-                //    await _agent.ExtractKanjiAsync(Txt_Input.Text.Trim(), fixedWords);
-
-                //Log($"Extraction finished. Found {kanjiList.Count} kanji terms.");
-
-                //if (kanjiList.Count == 0)
-                //{
-                //    MessageBox.Show("No kanji terms found.");
-                //    return;
-                //}
-
-                //Log("Opening kanji review window...");
-
-                //KanjiReview popup = new KanjiReview(kanjiList);
-                //popup.ShowDialog();
-
-                //Log("Kanji review completed.");
                 string inputText = Txt_Input.Text.Trim();
 
-                List<KanjiItem> fixedMatches = FindFixedWordsInText(inputText, fixedWords);
-                Log($"Fixed words found in input text: {fixedMatches.Count}");
+                Log("Start processing...");
+                Log("Loading fixed dictionary...");
 
-                Log("Sending text to ChatGPT for kanji extraction...");
+                FixedDictionaryService matcher = _agent.GetMatcher(fixedListPath);
 
-                List<KanjiItem> apiItems =
-                    await _agent.ExtractKanjiAsync(inputText, fixedWords);
+                Log("Fixed dictionary ready: " + matcher.Count + " words.");
+
+                string maskedText = matcher.MaskFixedWords(
+                    inputText,
+                    out List<FixedWord> fixedMatches
+                );
+
+                Log("Fixed words masked out of script: " + fixedMatches.Count);
+                Log("Masked text for ChatGPT:");
+                Log(maskedText);
+
+                List<ApiKanjiItem> apiItems;
+
+                if (!JapaneseTextNormalizer.ContainsKanjiExceptFixedMarker(maskedText))
+                {
+                    apiItems = new List<ApiKanjiItem>();
+                    Log("No unknown kanji remains. ChatGPT skipped.");
+                }
+                else
+                {
+                    Log("Sending only unknown/difficult kanji text to ChatGPT...");
+
+                    apiItems = await _agent.ExtractKanjiAsync(maskedText);
+
+                    Log("Model returned " + apiItems.Count + " candidate term(s).");
+                }
 
                 List<KanjiItem> kanjiList =
-                    MergeFixedAndApiResults(fixedMatches, apiItems, fixedWords);
+                    MergeWithConflicts(matcher, fixedMatches, apiItems);
 
-                Log($"Extraction finished. Total review terms: {kanjiList.Count}");
+                int fixedCount = kanjiList.Count(k => k.DictionaryStatus == "matched");
+                int newCount = kanjiList.Count(k => k.DictionaryStatus == "new");
+                int conflicts = kanjiList.Count(k => k.DictionaryStatus == "conflict");
+
+                Log("Merged. Fixed " + fixedCount +
+                    " | New " + newCount +
+                    " | Conflicts " + conflicts);
 
                 if (kanjiList.Count == 0)
                 {
@@ -227,7 +274,7 @@ namespace WindowsFormsApp1.UIDesign
                 KanjiReview popup = new KanjiReview(kanjiList, fixedListPath);
                 popup.ShowDialog();
 
-                Log($"Kanji review completed. Saved/updated: {popup.SavedCount} word(s).");
+                Log("Kanji review completed. Saved/updated: " + popup.SavedCount + " word(s).");
             }
             catch (Exception ex)
             {
@@ -242,12 +289,52 @@ namespace WindowsFormsApp1.UIDesign
 
         private void Log(string message)
         {
-            Txt_Msg.AppendText($"[{DateTime.Now:HH:mm:ss}] {message}{Environment.NewLine}");
+            Txt_Msg.AppendText("[" + DateTime.Now.ToString("HH:mm:ss") + "] " +
+                               message + Environment.NewLine);
         }
 
+        // ---------------------------------------------------------------
+        // Agent
+        // ---------------------------------------------------------------
 
         public class ScriptProcessingAgent
         {
+            // Change this model if needed.
+            private const string ModelName = "gpt-5.4-mini";
+            private const string Endpoint = "https://api.openai.com/v1/responses";
+
+            private static readonly HttpClient Http = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(120)
+            };
+
+            private string _cachedPath;
+            private DateTime _cachedStamp;
+            private FixedDictionaryService _cachedMatcher;
+
+            public FixedDictionaryService GetMatcher(string path)
+            {
+                if (!File.Exists(path))
+                    throw new FileNotFoundException("Fixed list file not found.", path);
+
+                DateTime stamp = File.GetLastWriteTimeUtc(path);
+
+                if (_cachedMatcher != null &&
+                    _cachedPath == path &&
+                    _cachedStamp == stamp)
+                {
+                    return _cachedMatcher;
+                }
+
+                List<FixedWord> words = LoadFixedList(path);
+
+                _cachedMatcher = new FixedDictionaryService(words);
+                _cachedPath = path;
+                _cachedStamp = stamp;
+
+                return _cachedMatcher;
+            }
+
             public List<FixedWord> LoadFixedList(string path)
             {
                 var list = new List<FixedWord>();
@@ -267,16 +354,16 @@ namespace WindowsFormsApp1.UIDesign
                     {
                         string word = ws.Cell(row, 1).GetString().Trim();
                         string hira = ws.Cell(row, 2).GetString().Trim();
-                        string Difficulty = ws.Cell(row, 3).GetString().Trim();
+                        string difficulty = ws.Cell(row, 3).GetString().Trim();
 
                         if (string.IsNullOrWhiteSpace(word))
                             continue;
 
                         list.Add(new FixedWord
                         {
-                            Word = word,
-                            Hiragana = hira,
-                            Difficulty = string.IsNullOrWhiteSpace(Difficulty) ? "General" : Difficulty
+                            Word = JapaneseTextNormalizer.NormalizeText(word),
+                            Hiragana = JapaneseTextNormalizer.ToHiragana(hira),
+                            Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "General" : difficulty
                         });
                     }
                 }
@@ -284,93 +371,192 @@ namespace WindowsFormsApp1.UIDesign
                 return list;
             }
 
-            public async Task<List<KanjiItem>> ExtractKanjiAsync(string inputText, List<FixedWord> fixedWords)
+            public async Task<List<ApiKanjiItem>> ExtractKanjiAsync(string maskedText)
             {
-              
                 string apiKey =
-                Environment.GetEnvironmentVariable("OPENAI_API_KEY", EnvironmentVariableTarget.User)
-                ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY", EnvironmentVariableTarget.Machine)
-                ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+                    Environment.GetEnvironmentVariable("OPENAI_API_KEY", EnvironmentVariableTarget.User)
+                    ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY", EnvironmentVariableTarget.Machine)
+                    ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
 
                 if (string.IsNullOrWhiteSpace(apiKey))
-                    throw new Exception("OPENAI_API_KEY is missing. Please set it in Windows environment variables.");
+                    throw new Exception("OPENAI_API_KEY is missing. Set it in Windows environment variables.");
 
-                string fixedDictionaryText = BuildFixedDictionaryText(fixedWords);
+                string prompt =
+                                @"You are a Japanese TTS pronunciation extraction agent.
 
-                string prompt = @"
-                                    You are a Japanese TTS pronunciation extraction agent.
+                                The marker 【FIXED】 means this word is already handled by the fixed dictionary.
+                                Ignore every 【FIXED】 marker completely.
+                                Never output 【FIXED】.
+                                Never guess the hidden fixed words.
+                                Extract EVERY kanji word and important term — do not skip any, even if it
+                                seems common. It is better to over-extract than to miss one.
 
-                                    Extract kanji words and important Japanese terms from the input text.
+                                From the remaining visible text, extract ONLY kanji words and important Japanese terms.
 
-                                    Return JSON only.
+                                Target terms:
+                                - place names
+                                - shrine names
+                                - temple names
+                                - museum names
+                                - person names
+                                - organization names
+                                - historical terms
+                                - cultural terms
+                                - technical terms
+                                - rare kanji words
+                                - difficult pronunciation words
 
-                                    JSON format:
-                                    [
-                                      {
-                                        ""word"": ""盛岡"",
-                                        ""hiragana"": ""もりおか"",
-                                        ""difficulty"": ""high"",
-                                        ""reason"": ""Place name; reading is not predictable.""
-                                      }
-                                    ]
+                                Prefer full words and phrases over single kanji characters.
 
-                                    Difficulty rules:
-                                    low = common word with stable pronunciation.
-                                    medium = compound kanji, technical word, cultural word, historical word.
-                                    high = place name, shrine name, person name, rare kanji, local term, or difficult pronunciation.
+                                Return ONLY a JSON array.
+                                No prose.
+                                No markdown fences.
 
-                                    Fixed dictionary has highest priority.
-                                    If a word exists in fixed dictionary, use that hiragana reading.
+                                Format:
+                                [
+                                  {
+                                    ""word"": ""笄"",
+                                    ""hiragana"": ""こうがい"",
+                                    ""difficulty"": ""high"",
+                                    ""reason"": ""Rare kanji; reading is not predictable.""
+                                  }
+                                ]
 
-                                    Fixed Dictionary:
-                                    " + fixedDictionaryText + @"
+                                difficulty:
+                                low = common stable word
+                                medium = compound/technical/cultural/historical word
+                                high = place/shrine/person name, rare kanji, local term, uncertain reading
 
-                                    Input Text:
-                                    " + inputText;
+                                Input Text:
+                                " + maskedText;
 
-                using (HttpClient client = new HttpClient())
+                var body = new
                 {
-                    client.DefaultRequestHeaders.Add("Authorization", "Bearer " + apiKey);
+                    model = ModelName,
+                    input = prompt,
+                    max_output_tokens = 2000,
+                    temperature = 0
+                    
+                };
 
-                    var body = new
-                    {
-                        model = "gpt-5.4-mini",
-                        input = prompt
-                    };
+                using (var req = new HttpRequestMessage(HttpMethod.Post, Endpoint))
+                {
+                    req.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", apiKey);
 
-                    string jsonBody = JsonConvert.SerializeObject(body);
+                    req.Content = new StringContent(
+                        JsonConvert.SerializeObject(body),
+                        Encoding.UTF8,
+                        "application/json"
+                    );
 
-                    var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-
-                    var response = await client.PostAsync("https://api.openai.com/v1/responses", content);
-
+                    HttpResponseMessage response = await Http.SendAsync(req);
                     string responseText = await response.Content.ReadAsStringAsync();
 
                     if (!response.IsSuccessStatusCode)
-                        throw new Exception(responseText);
+                    {
+                        throw new Exception(
+                            "Model API error (" + (int)response.StatusCode + "): " + responseText
+                        );
+                    }
 
-                    dynamic result = JsonConvert.DeserializeObject(responseText);
-
-                    string outputText = result.output[0].content[0].text;
-
-                    return JsonConvert.DeserializeObject<List<KanjiItem>>(outputText);
+                    string rawText = ExtractOutputText(responseText);
+                    return ParseKanjiArray(rawText);
                 }
             }
 
-            private string BuildFixedDictionaryText(List<FixedWord> fixedWords)
+            private static string ExtractOutputText(string responseJson)
             {
-                StringBuilder sb = new StringBuilder();
-
-                foreach (var item in fixedWords)
+                try
                 {
-                    sb.AppendLine(item.Word + " = " + item.Hiragana);
-                }
+                    JObject root = JObject.Parse(responseJson);
 
-                return sb.ToString();
+                    JToken convenience = root["output_text"];
+
+                    if (convenience != null && convenience.Type == JTokenType.String)
+                        return convenience.ToString();
+
+                    var sb = new StringBuilder();
+
+                    JArray output = root["output"] as JArray;
+
+                    if (output != null)
+                    {
+                        foreach (JToken item in output)
+                        {
+                            JArray content = item["content"] as JArray;
+
+                            if (content == null)
+                                continue;
+
+                            foreach (JToken c in content)
+                            {
+                                JToken t = c["text"];
+
+                                if (t != null)
+                                    sb.Append(t.ToString());
+                            }
+                        }
+                    }
+
+                    return sb.ToString();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Could not read model response shape: " + ex.Message);
+                }
             }
 
+            private static List<ApiKanjiItem> ParseKanjiArray(string text)
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                    return new List<ApiKanjiItem>();
 
+                string cleaned = text
+                    .Replace("```json", "")
+                    .Replace("```", "")
+                    .Trim();
+
+                int start = cleaned.IndexOf('[');
+                int end = cleaned.LastIndexOf(']');
+
+                if (start >= 0 && end > start)
+                    cleaned = cleaned.Substring(start, end - start + 1);
+
+                try
+                {
+                    List<ApiKanjiItem> items =
+                        JsonConvert.DeserializeObject<List<ApiKanjiItem>>(cleaned);
+
+                    if (items == null)
+                        return new List<ApiKanjiItem>();
+
+                    foreach (var item in items)
+                    {
+                        if (item == null)
+                            continue;
+
+                        item.Word = JapaneseTextNormalizer.NormalizeText(item.Word);
+                        item.Hiragana = JapaneseTextNormalizer.ToHiragana(item.Hiragana);
+                    }
+
+                    return items
+                        .Where(x => x != null && !string.IsNullOrWhiteSpace(x.Word))
+                        .ToList();
+                }
+                catch (JsonException ex)
+                {
+                    throw new Exception(
+                        "ChatGPT returned invalid JSON.\n\nRaw model output:\n" +
+                        text + "\n\nJSON error: " + ex.Message
+                    );
+                }
+            }
         }
+
+        // ---------------------------------------------------------------
+        // Designer event handlers
+        // ---------------------------------------------------------------
 
         private void Back_button_Click(object sender, EventArgs e)
         {
@@ -381,14 +567,21 @@ namespace WindowsFormsApp1.UIDesign
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.Title = "Select Language Excel File";
+                openFileDialog.Title = "Select Fixed List Excel File";
                 openFileDialog.Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|All Files (*.*)|*.*";
-                openFileDialog.InitialDirectory = Path.GetDirectoryName(txt_FixedList.Text);
+
+                string current = txt_FixedList.Text;
+
+                if (!string.IsNullOrWhiteSpace(current))
+                {
+                    string dir = Path.GetDirectoryName(current);
+
+                    if (!string.IsNullOrWhiteSpace(dir) && Directory.Exists(dir))
+                        openFileDialog.InitialDirectory = dir;
+                }
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
                     txt_FixedList.Text = openFileDialog.FileName;
-                }
             }
         }
     }

@@ -58,18 +58,18 @@ namespace WindowsFormsApp1
             //MainForm uiMain = new MainForm();
             //uiMain.Show();
             AppConfig config = AppConfig.Load();
-            AppState state = new AppState(config);
+            //AppState state = new AppState(config);
 
-            MainForm uiMain = new MainForm(state); // important
+          //  MainForm uiMain = new MainForm(state); // important
 
-            this.Hide();
+            //this.Hide();
 
-            uiMain.FormClosed += delegate
-            {
-                this.Close();
-            };
+            //uiMain.FormClosed += delegate
+            //{
+            //    this.Close();
+            //};
 
-            uiMain.Show();
+            //uiMain.Show();
         }
     }
 }

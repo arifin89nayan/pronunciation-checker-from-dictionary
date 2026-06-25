@@ -15,8 +15,8 @@ namespace WindowsFormsApp1.UIDesign
         private readonly string _fixedListPath;
 
         private DataGridView dgvKanji;
+        private Button btnSelectReviewRequired;
         private Button btnSaveApproved;
-        private Button btnSelectAllNew;
         private Button btnClose;
 
         public int SavedCount { get; private set; }
@@ -32,6 +32,18 @@ namespace WindowsFormsApp1.UIDesign
             LoadKanjiList();
         }
 
+        private void dgvKanji_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0)
+                return;
+
+            if (dgvKanji.Columns[e.ColumnIndex].Name == "hiragana")
+            {
+                dgvKanji.Rows[e.RowIndex].Cells["save"].Value = true;
+                dgvKanji.Rows[e.RowIndex].DefaultCellStyle.BackColor = Color.LemonChiffon;
+            }
+        }
+
         private void BuildKanjiGrid()
         {
             dgvKanji = new DataGridView();
@@ -43,8 +55,9 @@ namespace WindowsFormsApp1.UIDesign
             dgvKanji.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             dgvKanji.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvKanji.ReadOnly = false;
+            dgvKanji.CellEndEdit += dgvKanji_CellEndEdit;
 
-            var chk = new DataGridViewCheckBoxColumn();
+            DataGridViewCheckBoxColumn chk = new DataGridViewCheckBoxColumn();
             chk.Name = "save";
             chk.HeaderText = "Save";
             chk.FillWeight = 25;
@@ -53,35 +66,40 @@ namespace WindowsFormsApp1.UIDesign
             dgvKanji.Columns.Add("word", "Word");
             dgvKanji.Columns.Add("hiragana", "Correct Hiragana");
             dgvKanji.Columns.Add("source", "Source");
+            dgvKanji.Columns.Add("status", "Status");
+            dgvKanji.Columns.Add("model", "Model Reading");
             dgvKanji.Columns.Add("difficulty", "Difficulty");
             dgvKanji.Columns.Add("reason", "Reason");
 
             dgvKanji.Columns["word"].ReadOnly = true;
             dgvKanji.Columns["source"].ReadOnly = true;
-            dgvKanji.Columns["difficulty"].ReadOnly = false;
+            dgvKanji.Columns["status"].ReadOnly = true;
+            dgvKanji.Columns["model"].ReadOnly = true;
             dgvKanji.Columns["reason"].ReadOnly = true;
 
             dgvKanji.Columns["save"].FillWeight = 25;
             dgvKanji.Columns["word"].FillWeight = 80;
-            dgvKanji.Columns["hiragana"].FillWeight = 90;
+            dgvKanji.Columns["hiragana"].FillWeight = 80;
             dgvKanji.Columns["source"].FillWeight = 50;
+            dgvKanji.Columns["status"].FillWeight = 60;
+            dgvKanji.Columns["model"].FillWeight = 80;
             dgvKanji.Columns["difficulty"].FillWeight = 60;
-            dgvKanji.Columns["reason"].FillWeight = 180;
+            dgvKanji.Columns["reason"].FillWeight = 200;
 
             this.Controls.Add(dgvKanji);
 
-            btnSelectAllNew = new Button();
-            btnSelectAllNew.Text = "Select All New";
-            btnSelectAllNew.Size = new Size(160, 40);
-            btnSelectAllNew.Location = new Point(20, this.ClientSize.Height - 60);
-            btnSelectAllNew.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnSelectAllNew.Click += btnSelectAllNew_Click;
-            this.Controls.Add(btnSelectAllNew);
+            btnSelectReviewRequired = new Button();
+            btnSelectReviewRequired.Text = "Select Review Items";
+            btnSelectReviewRequired.Size = new Size(190, 40);
+            btnSelectReviewRequired.Location = new Point(20, this.ClientSize.Height - 60);
+            btnSelectReviewRequired.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            btnSelectReviewRequired.Click += btnSelectReviewRequired_Click;
+            this.Controls.Add(btnSelectReviewRequired);
 
             btnSaveApproved = new Button();
             btnSaveApproved.Text = "Save Approved to Excel";
             btnSaveApproved.Size = new Size(230, 40);
-            btnSaveApproved.Location = new Point(200, this.ClientSize.Height - 60);
+            btnSaveApproved.Location = new Point(230, this.ClientSize.Height - 60);
             btnSaveApproved.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnSaveApproved.BackColor = Color.Orange;
             btnSaveApproved.Click += btnSaveApproved_Click;
@@ -102,41 +120,63 @@ namespace WindowsFormsApp1.UIDesign
 
             foreach (var item in _kanjiList)
             {
-                bool saveDefault = item.Source != "Fixed";
+                bool saveDefault = item.SaveToFixedList || item.DictionaryStatus == "new";
 
                 int rowIndex = dgvKanji.Rows.Add(
                     saveDefault,
                     item.Word,
                     item.Hiragana,
                     item.Source,
+                    item.DictionaryStatus,
+                    item.ModelHiragana,
                     item.Difficulty,
                     item.Reason
                 );
 
-                var row = dgvKanji.Rows[rowIndex];
+                DataGridViewRow row = dgvKanji.Rows[rowIndex];
                 row.Tag = item;
 
-                string source = item.Source == null ? "" : item.Source.ToLower();
-                string difficulty = item.Difficulty == null ? "" : item.Difficulty.ToLower();
-
-                if (source == "fixed")
-                    row.DefaultCellStyle.BackColor = Color.Honeydew;
-                else if (difficulty == "high")
-                    row.DefaultCellStyle.BackColor = Color.MistyRose;
-                else if (difficulty == "medium")
-                    row.DefaultCellStyle.BackColor = Color.LemonChiffon;
-                else
-                    row.DefaultCellStyle.BackColor = Color.White;
+                ApplyRowColor(row, item);
             }
         }
 
-        private void btnSelectAllNew_Click(object sender, EventArgs e)
+        private void ApplyRowColor(DataGridViewRow row, Inputtext.KanjiItem item)
+        {
+            string status = item.DictionaryStatus ?? "";
+            string difficulty = item.Difficulty == null ? "" : item.Difficulty.ToLower();
+
+            if (status == "matched")
+            {
+                row.DefaultCellStyle.BackColor = Color.Honeydew;
+            }
+            else if (status == "conflict")
+            {
+                row.DefaultCellStyle.BackColor = Color.MistyRose;
+            }
+            else if (difficulty == "high")
+            {
+                row.DefaultCellStyle.BackColor = Color.MistyRose;
+            }
+            else if (difficulty == "medium")
+            {
+                row.DefaultCellStyle.BackColor = Color.LemonChiffon;
+            }
+            else
+            {
+                row.DefaultCellStyle.BackColor = Color.White;
+            }
+        }
+
+        private void btnSelectReviewRequired_Click(object sender, EventArgs e)
         {
             foreach (DataGridViewRow row in dgvKanji.Rows)
             {
-                string source = Convert.ToString(row.Cells["source"].Value);
+                Inputtext.KanjiItem item = row.Tag as Inputtext.KanjiItem;
 
-                if (source != "Fixed")
+                if (item == null)
+                    continue;
+
+                if (item.ReviewRequired || item.SaveToFixedList || item.DictionaryStatus == "new")
                     row.Cells["save"].Value = true;
             }
         }
@@ -147,7 +187,7 @@ namespace WindowsFormsApp1.UIDesign
             {
                 dgvKanji.EndEdit();
 
-                var approved = new List<ApprovedWord>();
+                List<ApprovedWord> approved = new List<ApprovedWord>();
 
                 foreach (DataGridViewRow row in dgvKanji.Rows)
                 {
@@ -160,7 +200,11 @@ namespace WindowsFormsApp1.UIDesign
                         continue;
 
                     string word = Convert.ToString(row.Cells["word"].Value).Trim();
-                    string hiragana = NormalizeToHiragana(Convert.ToString(row.Cells["hiragana"].Value).Trim());
+
+                    string hiragana = JapaneseTextNormalizer.ToHiragana(
+                        Convert.ToString(row.Cells["hiragana"].Value).Trim()
+                    );
+
                     string difficulty = Convert.ToString(row.Cells["difficulty"].Value).Trim();
 
                     if (string.IsNullOrWhiteSpace(word))
@@ -169,16 +213,17 @@ namespace WindowsFormsApp1.UIDesign
                     if (string.IsNullOrWhiteSpace(hiragana))
                     {
                         MessageBox.Show(
-                            $"Hiragana is empty for word: {word}",
+                            "Hiragana is empty for word: " + word,
                             "Validation Error",
                             MessageBoxButtons.OK,
-                            MessageBoxIcon.Warning);
+                            MessageBoxIcon.Warning
+                        );
                         return;
                     }
 
                     approved.Add(new ApprovedWord
                     {
-                        Word = word,
+                        Word = JapaneseTextNormalizer.NormalizeText(word),
                         Hiragana = hiragana,
                         Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "general" : difficulty
                     });
@@ -187,10 +232,11 @@ namespace WindowsFormsApp1.UIDesign
                 if (approved.Count == 0)
                 {
                     MessageBox.Show(
-                        "No words selected. Please check Save column first.",
+                        "No rows selected. Please check the Save box for the row you want to update.",
                         "No Selection",
                         MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
+                        MessageBoxIcon.Information
+                    );
                     return;
                 }
 
@@ -199,10 +245,33 @@ namespace WindowsFormsApp1.UIDesign
                 SavedCount = approved.Count;
 
                 MessageBox.Show(
-                    $"Saved/updated {approved.Count} word(s) to Fixed List Excel.\n\nNext time these words will be Fixed List words.",
+                    "Saved/updated " + approved.Count +
+                    " word(s) to Fixed List Excel.\n\nNext time these words will use the updated Fixed List reading.",
                     "Saved",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                    MessageBoxIcon.Information
+                );
+
+                // Update both the grid AND the underlying KanjiItem so a second
+                // "Select Review Items" click won't re-flag rows already saved.
+                foreach (DataGridViewRow row in dgvKanji.Rows)
+                {
+                    if (row.Cells["save"].Value is bool b && b)
+                    {
+                        if (row.Tag is Inputtext.KanjiItem item)
+                        {
+                            item.DictionaryStatus = "matched";
+                            item.Source = "Fixed";
+                            item.ReviewRequired = false;
+                            item.SaveToFixedList = false;
+                        }
+
+                        row.Cells["status"].Value = "matched";
+                        row.Cells["source"].Value = "Fixed";
+                        row.Cells["save"].Value = false;
+                        row.DefaultCellStyle.BackColor = Color.Honeydew;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -210,7 +279,8 @@ namespace WindowsFormsApp1.UIDesign
                     ex.Message,
                     "Excel Save Error",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxIcon.Error
+                );
             }
         }
 
@@ -230,53 +300,55 @@ namespace WindowsFormsApp1.UIDesign
                 File.Copy(path, backupPath, true);
             }
 
-            XLWorkbook workbook;
-            IXLWorksheet ws;
+            XLWorkbook workbook = File.Exists(path)
+                ? new XLWorkbook(path)
+                : new XLWorkbook();
 
-            if (File.Exists(path))
+            try
             {
-                workbook = new XLWorkbook(path);
-                ws = workbook.Worksheet(1);
-            }
-            else
-            {
-                workbook = new XLWorkbook();
-                ws = workbook.Worksheets.Add("FixedList");
-            }
+                IXLWorksheet ws = File.Exists(path)
+                    ? workbook.Worksheet(1)
+                    : workbook.Worksheets.Add("FixedList");
 
-            EnsureHeaders(ws);
+                EnsureHeaders(ws);
 
-            var rowMap = BuildWordRowMap(ws);
+                Dictionary<string, int> rowMap = BuildWordRowMap(ws);
 
-            foreach (var item in approvedWords)
-            {
-                if (rowMap.ContainsKey(item.Word))
+                foreach (ApprovedWord item in approvedWords)
                 {
-                    int row = rowMap[item.Word];
+                    string key = JapaneseTextNormalizer.NormalizeText(item.Word);
 
-                    ws.Cell(row, 1).Value = item.Word;
-                    ws.Cell(row, 2).Value = item.Hiragana;
-                    ws.Cell(row, 3).Value = item.Difficulty;
-                    ws.Cell(row, 4).Value = "Approved";
-                    ws.Cell(row, 5).Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    if (rowMap.ContainsKey(key))
+                    {
+                        int row = rowMap[key];
+
+                        ws.Cell(row, 1).Value = item.Word;
+                        ws.Cell(row, 2).Value = item.Hiragana;
+                        ws.Cell(row, 3).Value = item.Difficulty;
+                        ws.Cell(row, 4).Value = "Approved";
+                        ws.Cell(row, 5).Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    }
+                    else
+                    {
+                        int newRow = GetNextRow(ws);
+
+                        ws.Cell(newRow, 1).Value = item.Word;
+                        ws.Cell(newRow, 2).Value = item.Hiragana;
+                        ws.Cell(newRow, 3).Value = item.Difficulty;
+                        ws.Cell(newRow, 4).Value = "Approved";
+                        ws.Cell(newRow, 5).Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                        rowMap[key] = newRow;
+                    }
                 }
-                else
-                {
-                    int newRow = GetNextRow(ws);
 
-                    ws.Cell(newRow, 1).Value = item.Word;
-                    ws.Cell(newRow, 2).Value = item.Hiragana;
-                    ws.Cell(newRow, 3).Value = item.Difficulty;
-                    ws.Cell(newRow, 4).Value = "Approved";
-                    ws.Cell(newRow, 5).Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-                    rowMap[item.Word] = newRow;
-                }
+                ws.Columns().AdjustToContents();
+                workbook.SaveAs(path);
             }
-
-            ws.Columns().AdjustToContents();
-            workbook.SaveAs(path);
-            workbook.Dispose();
+            finally
+            {
+                workbook.Dispose();
+            }
         }
 
         private void EnsureHeaders(IXLWorksheet ws)
@@ -299,16 +371,19 @@ namespace WindowsFormsApp1.UIDesign
 
         private Dictionary<string, int> BuildWordRowMap(IXLWorksheet ws)
         {
-            var map = new Dictionary<string, int>(StringComparer.Ordinal);
+            Dictionary<string, int> map =
+                new Dictionary<string, int>(StringComparer.Ordinal);
 
-            var lastRow = ws.LastRowUsed();
+            IXLRow lastRow = ws.LastRowUsed();
 
             if (lastRow == null)
                 return map;
 
             for (int row = 2; row <= lastRow.RowNumber(); row++)
             {
-                string word = ws.Cell(row, 1).GetString().Trim();
+                string word = JapaneseTextNormalizer.NormalizeText(
+                    ws.Cell(row, 1).GetString()
+                );
 
                 if (string.IsNullOrWhiteSpace(word))
                     continue;
@@ -322,30 +397,12 @@ namespace WindowsFormsApp1.UIDesign
 
         private int GetNextRow(IXLWorksheet ws)
         {
-            var lastRow = ws.LastRowUsed();
+            IXLRow lastRow = ws.LastRowUsed();
 
             if (lastRow == null)
                 return 2;
 
             return lastRow.RowNumber() + 1;
-        }
-
-        private static string NormalizeToHiragana(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return text;
-
-            var sb = new StringBuilder();
-
-            foreach (char c in text.Trim())
-            {
-                if (c >= '\u30A1' && c <= '\u30F6')
-                    sb.Append((char)(c - 0x60));
-                else
-                    sb.Append(c);
-            }
-
-            return sb.ToString();
         }
 
         private class ApprovedWord
