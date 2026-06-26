@@ -389,6 +389,7 @@
     <Compile Include="Services\AzurePronunciationAssessmentService.cs" />
     <Compile Include="Services\AzureSpeechToTextService.cs" />
     <Compile Include="Services\AzureTtsService.cs" />
+    <Compile Include="Services\AzureTtsSimpleService.cs" />
     <Compile Include="Services\CaptionFormService.cs" />
     <Compile Include="Services\CaptionWidgetProcessor.cs" />
     <Compile Include="Services\ConfirmationListStore.cs" />
@@ -412,6 +413,7 @@
     <Compile Include="Services\GuideCsvFileParser.cs" />
     <Compile Include="Services\TextFormService.cs" />
     <Compile Include="Services\TextSimilarityService.cs" />
+    <Compile Include="Services\TtsPipelineService.cs" />
     <Compile Include="Services\WhisperNetSpeechToTextService.cs" />
     <Compile Include="StartupForm.cs">
       <SubType>Form</SubType>
@@ -496,7 +498,12 @@
     <Compile Include="UIDesign\KanjiReview.Designer.cs">
       <DependentUpon>KanjiReview.cs</DependentUpon>
     </Compile>
-    <Compile Include="UIDesign\Theme.cs" />
+    <Compile Include="UIDesign\TtsResultPreview.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UIDesign\TtsResultPreview.Designer.cs">
+      <DependentUpon>TtsResultPreview.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="AudioSetup.resx">
       <DependentUpon>AudioSetup.cs</DependentUpon>
     </EmbeddedResource>
@@ -550,6 +557,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UIDesign\KanjiReview.resx">
       <DependentUpon>KanjiReview.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UIDesign\TtsResultPreview.resx">
+      <DependentUpon>TtsResultPreview.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

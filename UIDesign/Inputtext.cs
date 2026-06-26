@@ -271,10 +271,40 @@ namespace WindowsFormsApp1.UIDesign
 
                 Log("Opening kanji review window...");
 
+                //KanjiReview popup = new KanjiReview(kanjiList, fixedListPath);
+                //popup.ShowDialog();
+
+                //Log("Kanji review completed. Saved/updated: " + popup.SavedCount + " word(s).");
                 KanjiReview popup = new KanjiReview(kanjiList, fixedListPath);
-                popup.ShowDialog();
+
+                DialogResult reviewResult = popup.ShowDialog();
+
+                if (reviewResult != DialogResult.OK)
+                {
+                    Log("Kanji review cancelled/back.");
+                    return;
+                }
+
+                List<KanjiItem> reviewedItems = popup.ReviewedItems;
 
                 Log("Kanji review completed. Saved/updated: " + popup.SavedCount + " word(s).");
+
+                // Step 8-13
+                Log("Generating General List, Final TTS List, and Azure SSML...");
+
+                string voiceName = "ja-JP-NanamiNeural";
+
+                TtsPipelineResult ttsResult =
+                    TtsPipelineService.Build(inputText, reviewedItems, voiceName);
+
+                Log("General List: " + ttsResult.GeneralList.Count);
+                Log("Final TTS List: " + ttsResult.FinalTtsList.Count);
+
+                // Open TTS Result Preview form
+                TtsResultPreview ttsForm =
+                    new TtsResultPreview(inputText, ttsResult);
+
+                ttsForm.ShowDialog();
             }
             catch (Exception ex)
             {

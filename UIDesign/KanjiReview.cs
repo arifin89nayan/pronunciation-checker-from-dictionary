@@ -20,6 +20,45 @@ namespace WindowsFormsApp1.UIDesign
         private Button btnClose;
 
         public int SavedCount { get; private set; }
+        public List<Inputtext.KanjiItem> ReviewedItems
+        {
+            get
+            {
+                SyncGridToItems();
+                return _kanjiList;
+            }
+        }
+        private void SyncGridToItems()
+        {
+            foreach (DataGridViewRow row in dgvKanji.Rows)
+            {
+                Inputtext.KanjiItem item = row.Tag as Inputtext.KanjiItem;
+
+                if (item == null)
+                    continue;
+
+                item.Word = JapaneseTextNormalizer.NormalizeText(
+                    Convert.ToString(row.Cells["word"].Value)
+                );
+
+                item.Hiragana = JapaneseTextNormalizer.ToHiragana(
+                    Convert.ToString(row.Cells["hiragana"].Value)
+                );
+
+                item.Source = Convert.ToString(row.Cells["source"].Value);
+                item.DictionaryStatus = Convert.ToString(row.Cells["status"].Value);
+                item.ModelHiragana = Convert.ToString(row.Cells["model"].Value);
+                item.Difficulty = Convert.ToString(row.Cells["difficulty"].Value);
+                item.Reason = Convert.ToString(row.Cells["reason"].Value);
+
+                bool shouldSave = false;
+
+                if (row.Cells["save"].Value is bool)
+                    shouldSave = (bool)row.Cells["save"].Value;
+
+                item.SaveToFixedList = shouldSave;
+            }
+        }
 
         public KanjiReview(List<Inputtext.KanjiItem> kanjiList, string fixedListPath)
         {
@@ -110,7 +149,13 @@ namespace WindowsFormsApp1.UIDesign
             btnClose.Size = new Size(120, 40);
             btnClose.Location = new Point(this.ClientSize.Width - 150, this.ClientSize.Height - 60);
             btnClose.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnClose.Click += delegate { this.Close(); };
+            //btnClose.Click += delegate { this.Close(); };
+            btnClose.Click += delegate
+            {
+                SyncGridToItems();
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            };
             this.Controls.Add(btnClose);
         }
 
@@ -282,6 +327,7 @@ namespace WindowsFormsApp1.UIDesign
                     MessageBoxIcon.Error
                 );
             }
+            SyncGridToItems();
         }
 
         private void SaveApprovedWordsToExcel(string path, List<ApprovedWord> approvedWords)
@@ -410,6 +456,48 @@ namespace WindowsFormsApp1.UIDesign
             public string Word { get; set; }
             public string Hiragana { get; set; }
             public string Difficulty { get; set; }
+        }
+
+        private void Back_button_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void NextBtn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                dgvKanji.EndEdit();
+
+                // Save edited grid data into _kanjiList
+                SyncGridToItems();
+
+                // Optional check: no empty hiragana allowed
+                var missing = _kanjiList
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Word))
+                    .Where(x => string.IsNullOrWhiteSpace(x.Hiragana))
+                    .Select(x => x.Word)
+                    .ToList();
+
+                if (missing.Count > 0)
+                {
+                    MessageBox.Show(
+                        "Some words have empty hiragana. Please fix them first:\n\n" +
+                        string.Join("\n", missing),
+                        "Missing Hiragana",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+
+                this.DialogResult = DialogResult.OK;
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Next Error");
+            }
         }
     }
 }
