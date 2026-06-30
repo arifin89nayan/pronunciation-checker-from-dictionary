@@ -21,6 +21,8 @@
             this.lblTitle = new System.Windows.Forms.Label();
             this.btnTtsList = new System.Windows.Forms.Button();
             this.btnSsmlPreview = new System.Windows.Forms.Button();
+            this.lblVoice = new System.Windows.Forms.Label();
+            this.cmbVoice = new System.Windows.Forms.ComboBox();
             this.pnlSummary = new System.Windows.Forms.Panel();
             this.lblFixedCount = new System.Windows.Forms.Label();
             this.lblGeneralCount = new System.Windows.Forms.Label();
@@ -49,6 +51,8 @@
             this.pnlHeader.Controls.Add(this.lblTitle);
             this.pnlHeader.Controls.Add(this.btnTtsList);
             this.pnlHeader.Controls.Add(this.btnSsmlPreview);
+            this.pnlHeader.Controls.Add(this.lblVoice);
+            this.pnlHeader.Controls.Add(this.cmbVoice);
             this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlHeader.Location = new System.Drawing.Point(0, 0);
             this.pnlHeader.Name = "pnlHeader";
@@ -91,6 +95,26 @@
             this.btnSsmlPreview.Text = "Azure SSML Preview";
             this.btnSsmlPreview.UseVisualStyleBackColor = false;
             this.btnSsmlPreview.Click += new System.EventHandler(this.btnSsmlPreview_Click);
+            // 
+            // lblVoice
+            // 
+            this.lblVoice.AutoSize = true;
+            this.lblVoice.Font = new System.Drawing.Font("Segoe UI", 11F);
+            this.lblVoice.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(170)))), ((int)(((byte)(176)))), ((int)(((byte)(188)))));
+            this.lblVoice.Location = new System.Drawing.Point(944, 28);
+            this.lblVoice.Name = "lblVoice";
+            this.lblVoice.Text = "Azure Voice";
+            // 
+            // cmbVoice
+            // 
+            this.cmbVoice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbVoice.Font = new System.Drawing.Font("Segoe UI", 12F);
+            this.cmbVoice.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.cmbVoice.Location = new System.Drawing.Point(944, 84);
+            this.cmbVoice.Name = "cmbVoice";
+            this.cmbVoice.Size = new System.Drawing.Size(435, 33);
+            this.cmbVoice.TabIndex = 2;
+            this.cmbVoice.SelectedIndexChanged += new System.EventHandler(this.cmbVoice_SelectedIndexChanged);
             // 
             // pnlSummary
             // 
@@ -321,6 +345,8 @@
         private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Button btnTtsList;
         private System.Windows.Forms.Button btnSsmlPreview;
+        private System.Windows.Forms.Label lblVoice;
+        private System.Windows.Forms.ComboBox cmbVoice;
         private System.Windows.Forms.Panel pnlSummary;
         private System.Windows.Forms.Label lblFixedCount;
         private System.Windows.Forms.Label lblGeneralCount;

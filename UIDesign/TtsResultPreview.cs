@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Media;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace WindowsFormsApp1.UIDesign
@@ -14,6 +15,18 @@ namespace WindowsFormsApp1.UIDesign
 
         private string _lastAudioPath;
         private SoundPlayer _player;
+
+        // Standard ja-JP neural voices (reliably support <sub> alias control).
+        private static readonly string[] JapaneseVoices =
+        {
+            "ja-JP-NanamiNeural",
+            "ja-JP-KeitaNeural",
+            "ja-JP-AoiNeural",
+            "ja-JP-DaichiNeural",
+            "ja-JP-MayuNeural",
+            "ja-JP-NaokiNeural",
+            "ja-JP-ShioriNeural"
+        };
 
         // Active-tab colors
         private static readonly Color ActiveTab = Color.FromArgb(255, 128, 0);
@@ -27,8 +40,70 @@ namespace WindowsFormsApp1.UIDesign
             _result = result;
 
             BuildTtsColumns();
+            PopulateVoices();
             UpdateSummary();
             ShowTtsList();
+        }
+
+        // -----------------------------------------------------------------
+        // Voice selection
+        // -----------------------------------------------------------------
+
+        private void PopulateVoices()
+        {
+            cmbVoice.Items.Clear();
+            foreach (var v in JapaneseVoices)
+                cmbVoice.Items.Add(v);
+
+            // Default to whatever voice the SSML was built with; else Nanami.
+            string current = ExtractVoiceFromSsml(_result?.Ssml);
+            int idx = string.IsNullOrEmpty(current) ? -1 : cmbVoice.Items.IndexOf(current);
+
+            if (idx < 0 && !string.IsNullOrEmpty(current))
+            {
+                // SSML uses a voice not in our standard list; add it so it stays selectable.
+                cmbVoice.Items.Insert(0, current);
+                idx = 0;
+            }
+
+            cmbVoice.SelectedIndex = idx >= 0 ? idx : 0;
+        }
+
+        private static string ExtractVoiceFromSsml(string ssml)
+        {
+            if (string.IsNullOrWhiteSpace(ssml))
+                return null;
+
+            Match m = Regex.Match(ssml, "<voice\\s+name=\"([^\"]*)\"", RegexOptions.IgnoreCase);
+            return m.Success ? m.Groups[1].Value : null;
+        }
+
+        private string SelectedVoice
+        {
+            get { return cmbVoice.SelectedItem as string ?? JapaneseVoices[0]; }
+        }
+
+        // Returns the SSML with the <voice name="..."> swapped to the selected voice.
+        private string SsmlWithSelectedVoice()
+        {
+            if (_result == null || string.IsNullOrWhiteSpace(_result.Ssml))
+                return _result?.Ssml;
+
+            return Regex.Replace(
+                _result.Ssml,
+                "(<voice\\s+name=\")([^\"]*)(\")",
+                "${1}" + SelectedVoice + "$3",
+                RegexOptions.IgnoreCase);
+        }
+
+        private void cmbVoice_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // If the SSML view is open, refresh it so the preview matches what will be sent.
+            if (txtSsml.Visible)
+                txtSsml.Text = SsmlWithSelectedVoice() ?? "No SSML generated.";
+
+            lblStatus.ForeColor = Color.FromArgb(80, 86, 96);
+            lblStatus.Text = "Voice set to " + SelectedVoice + ".";
         }
 
         // -----------------------------------------------------------------
@@ -69,7 +144,7 @@ namespace WindowsFormsApp1.UIDesign
             txtSsml.WordWrap = chkWordWrap.Checked;
             txtSsml.Text = (_result == null || string.IsNullOrWhiteSpace(_result.Ssml))
                 ? "No SSML generated."
-                : _result.Ssml;
+                : SsmlWithSelectedVoice();
         }
 
         private void SetActiveTab(bool isList)
@@ -150,7 +225,7 @@ namespace WindowsFormsApp1.UIDesign
         {
             if (_result != null && !string.IsNullOrWhiteSpace(_result.Ssml))
             {
-                Clipboard.SetText(_result.Ssml);
+                Clipboard.SetText(SsmlWithSelectedVoice());
                 lblStatus.Text = "SSML copied to clipboard.";
             }
         }
@@ -182,20 +257,21 @@ namespace WindowsFormsApp1.UIDesign
 
                 progress.Visible = true;
                 lblStatus.ForeColor = Color.FromArgb(80, 86, 96);
-                lblStatus.Text = "Generating audio with Azure TTS...";
+                lblStatus.Text = "Generating audio with " + SelectedVoice + "...";
 
                 string outputFolder = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                     "TTSAgent",
                     "Audio");
 
+                string voiceTag = SelectedVoice.Replace("ja-JP-", "").Replace("Neural", "");
                 string outputFileName =
-                    "tts_audio_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".wav";
+                    "tts_" + voiceTag + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".wav";
 
                 var service = new AzureTtsSimpleService();
 
                 _lastAudioPath = await service.GenerateAudioAsync(
-                    _result.Ssml, outputFolder, outputFileName);
+                    SsmlWithSelectedVoice(), outputFolder, outputFileName);
 
                 progress.Visible = false;
                 lblStatus.ForeColor = Color.FromArgb(34, 139, 34);
