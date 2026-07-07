@@ -335,5 +335,17 @@ namespace WindowsFormsApp1.Properties {
                 this["txt_workspace"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Fixed_List {
+            get {
+                return ((string)(this["Fixed_List"]));
+            }
+            set {
+                this["Fixed_List"] = value;
+            }
+        }
     }
 }

@@ -32,7 +32,7 @@ namespace WindowsFormsApp1.Services
             _fileService = new FileService();
             _languageList = languageList;
         }
-        public async Task ProcessWidges(Widget widget, QuizParserModel widgetParsedModel)
+        public async Task ProcessWidges22(Widget widget, QuizParserModel widgetParsedModel)
         {
 
             _filepath = GlobalProperties.PlayConfigPath;
@@ -49,8 +49,79 @@ namespace WindowsFormsApp1.Services
             }
             
         }
+        public async Task ProcessWidges(Widget widget, QuizParserModel widgetParsedModel)
+        {
+            _filepath = GlobalProperties.PlayConfigPath;
 
+            var parserModel = widgetParsedModel;
+
+            // Reset option order for every widget processing
+            optionOrder = 1;
+
+            // Keep main quiz values in QuizProperties
+            QuizProperties.Instance.Question = parserModel.QuizQuestion?.Trim() ?? "";
+            QuizProperties.Instance.CorrectAnsDetails = parserModel.QuizCorrectAnswer?.Trim() ?? "";
+
+            // Build options using correct answer selection number
+            QuizProperties.Instance.Options = GetOptions(parserModel);
+
+            foreach (var line in widget.Lines)
+            {
+                await ProcessLine(line, widget, parserModel, optionOrder);
+            }
+        }
         private List<Option> GetOptions(QuizParserModel parserModel)
+        {
+            int correctIndex = int.TryParse(parserModel.QuizCorrectAnswerSelection?.Trim(), out int result)
+                ? result
+                : -1;
+
+            var options = new List<Option>();
+
+            if (!string.IsNullOrWhiteSpace(parserModel.SelectionA))
+            {
+                options.Add(new Option
+                {
+                    Text = parserModel.SelectionA.Trim(),
+                    IsCorrectAns = correctIndex == 1,
+                    Order = 1
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(parserModel.SelectionB))
+            {
+                options.Add(new Option
+                {
+                    Text = parserModel.SelectionB.Trim(),
+                    IsCorrectAns = correctIndex == 2,
+                    Order = 2
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(parserModel.SelectionC))
+            {
+                options.Add(new Option
+                {
+                    Text = parserModel.SelectionC.Trim(),
+                    IsCorrectAns = correctIndex == 3,
+                    Order = 3
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(parserModel.SelectionD))
+            {
+                options.Add(new Option
+                {
+                    Text = parserModel.SelectionD.Trim(),
+                    IsCorrectAns = correctIndex == 4,
+                    Order = 4
+                });
+            }
+
+            return options;
+        }
+
+        private List<Option> GetOptions22(QuizParserModel parserModel)
         {
             int correctIndex = int.TryParse(parserModel.QuizCorrectAnswerSelection, out int result) ? result : -1;
 
@@ -270,230 +341,7 @@ namespace WindowsFormsApp1.Services
             _fileService.QuizSaveLineFiles(line);
         }
 
-        //private async Task ProcessLine(Line line, Widget widget, QuizParserModel widgetParsedModel, int order)
-        //{
-        //    TextValue languageAndVoice = TextConverterService.MapQuizModelToTextValue(widgetParsedModel, _languageList);
-
-        //    //Process options
-        //    if (line.Type == LineTypeEnum.Option)
-        //    {
-        //        //process the options
-        //        var items = PatternHelper.GetItems(line.Text, @"<([^>]+)>");
-
-        //        var RightOrWorng = TextExtrator.ExtractRightOrWorngAns(GlobalProperties.PlayConfigPath);
-
-        //        if (line.Text.StartsWith("<N><T>"))
-        //        {
-        //            //int offset = QuizProperties.Instance.CurrentOffset;
-        //            int offset = QuizProperties.Instance.CurrentOffset == 0 ? 50 : QuizProperties.Instance.CurrentOffset;
-        //            int length = QuizProperties.Instance.Options.FirstOrDefault(c => c.Order == optionOrder).Text.Length * 2;
-        //            //var correctOption = QuizProperties.Instance.Options.FirstOrDefault(o => o.IsCorrectAns);
-        //            //int length = correctOption != null ? correctOption.Text.Length * 2 : 0;
-        //            //int length = QuizProperties.Instance.Options.FirstOrDefault(c => c.Order == order).Text.Length * 2;
-
-        //            items[2] = $"<{offset}:{length}>";
-
-        //            QuizProperties.Instance.CurrentOffset = offset + length;
-        //        }
-        //        else if (line.Text.StartsWith("<H><T>"))
-        //        {
-        //            int length = QuizProperties.Instance.Options.FirstOrDefault(c => c.Order == optionOrder).Text.Length * 2;
-        //            int offset = QuizProperties.Instance.CurrentOffset;
-
-        //            items[2] = $"<{offset}:{length}>";
-
-        //            QuizProperties.Instance.CurrentOffset = offset + length;
-        //            //string templatepath = txt_template.Text.Trim() ?? "";
-        //            Properties.Settings.Default.QuizAnsDetailsOffset = QuizProperties.Instance.CurrentOffset;
-        //            Properties.Settings.Default.Save();
-        //            optionOrder++;
-        //            //int length = QuizProperties.Instance.Options.FirstOrDefault(c => c.Order == order).Text.Length * 2;
-        //            ///////
-        //            //var correctOption = QuizProperties.Instance.Options.FirstOrDefault(o => o.IsCorrectAns);
-        //            //int length = correctOption != null ? correctOption.Text.Length * 2 : 0;
-        //            //int offset = QuizProperties.Instance.CurrentOffset;
-
-        //            //items[2] = $"<{offset}:{length}>";
-
-        //            //QuizProperties.Instance.CurrentOffset = offset + length;
-        //            //optionOrder++;
-        //        }
-        //        else if (line.Text.Length == 3)
-        //        {
-
-        //            int correctAnsOrder = QuizProperties.Instance.Options.First(c => c.IsCorrectAns).Order;
-
-        //            if (correctAnsOrder == line.CorrectAnsIndicatorOrder)
-        //            {
-        //                if (RightOrWorng.HasValue)
-        //                {
-        //                    items[0] = $"<{RightOrWorng.Value.rightAns.ToString()}>";
-        //                }
-        //            }
-        //            else
-        //            {
-        //                items[0] = $"<{RightOrWorng.Value.wrongAns.ToString()}>";
-        //            }
-        //        }
-
-        //        GlobalConfigPropreties.Instance.AddLine(string.Join("", items));
-        //    }
-        //    //Process question
-        //    else if (line.IsQuestion && widget.IsContainSelection && line.Type == LineTypeEnum.Text)
-        //    {
-        //        audionFileName = AudioInfo.GetRandomFileName("Q-");
-        //        string OutputPath = Properties.Settings.Default.OutPutPath;
-        //        //audioFilePath = Path.Combine(OutputPath, audionFileName);
-        //        audioFilePath = OutputPath;
-
-        //        QuizProperties.Instance.Question = widgetParsedModel.QuizQuestion;
-
-        //        if (!string.IsNullOrWhiteSpace(widgetParsedModel.QuizQuestionAudio))
-        //        {
-        //            audionFileName = widgetParsedModel.QuizQuestionAudio;
-
-        //            ProcessUploadedAudio(uploadedAudioPath: Path.Combine(GlobalProperties.AutoProcessAudioFolderPath, widgetParsedModel.QuizQuestionAudio),
-        //              outputFilePath: Path.Combine(GlobalProperties.OutputPath, widgetParsedModel.QuizQuestionAudio));
-        //        }
-        //        else
-        //        {
-        //            await GenerateAudio(widgetParsedModel.QuizQuestion, languageAndVoice.language, languageAndVoice.voice, audionFileName);
-        //        }
-        //        GenerateQuestionLine(widget);
-        //    }
-        //    //Process question detail
-        //    else if (line.IsQuestion && !line.Text.Contains("Template<T><50") && line.Text.Contains("Template<T>") && line.Type == LineTypeEnum.Text)
-        //    {
-
-        //        audioFilePath = Properties.Settings.Default.OutPutPath;
-
-        //        QuizProperties.Instance.CorrectAnsDetails = widgetParsedModel.QuizCorrectAnswer;
-
-        //        if (!string.IsNullOrWhiteSpace(widgetParsedModel.QuizQuestionAudio))
-        //        {
-        //            audionFileName = widgetParsedModel.QuizExplanationAudio;
-
-        //            ProcessUploadedAudio(uploadedAudioPath: Path.Combine(GlobalProperties.AutoProcessAudioFolderPath, widgetParsedModel.QuizQuestionAudio),
-        //              outputFilePath: Path.Combine(GlobalProperties.OutputPath, widgetParsedModel.QuizQuestionAudio));
-        //        }
-        //        else
-        //        {
-        //            audionFileName = AudioInfo.GetRandomFileName("QD-");
-
-        //            await GenerateAudio(widgetParsedModel.QuizCorrectAnswer, languageAndVoice.language, languageAndVoice.voice, audionFileName);
-        //        }
-
-
-        //        GenerateQuestionDetailLine(widget);
-        //    }
-        //    //Quiz widget can contain Captions, so process the caption widget.
-        //    else if (line.Text.Contains("Template<C>") && widget.IsContainSelection && widget.Lines.Any(c => c.WidgetType == WidgetTypeEnum.Caption))
-        //    {
-        //        GuideParsedModel questionCaption = new GuideParsedModel
-        //        {
-        //            Guide = widgetParsedModel.QuizQuestion,
-        //            language = widgetParsedModel.Language,
-        //            Voice = widgetParsedModel.Voice,
-        //            AudioFile= widgetParsedModel.QuizQuestionAudio,
-        //        };
-
-
-        //        await new CaptionWidgetProcessor(_languageList).QuizCaptionProcessWidges(widget, questionCaption);
-
-
-        //        //Process question and question detail lines after caption widget processing.
-
-        //        if (line.Type == LineTypeEnum.Caption && widget.IsContainSelection)
-        //        {
-        //            QuizProperties.Instance.Question = widgetParsedModel.QuizQuestion;
-
-        //        }
-        //        //TODO : 2. Need to fix the correct answer details if the line is a truly caption line.
-        //        else if (line.Type == LineTypeEnum.Caption && !widget.IsContainSelection)
-        //        {
-        //            QuizProperties.Instance.CorrectAnsDetails = widgetParsedModel.QuizCorrectAnswer;
-        //        }
-        //    }
-        //    else if (line.Text.Contains("Template<C>") && !widget.IsContainSelection && widget.Lines.Any(c => c.WidgetType == WidgetTypeEnum.Caption))
-        //    {
-        //        GuideParsedModel AnsDetailsCaption = new GuideParsedModel
-        //        {
-        //            Guide = widgetParsedModel.QuizCorrectAnswer,
-        //            language = widgetParsedModel.Language,
-        //            Voice = widgetParsedModel.Voice,
-        //            QuizexpAudioFile= widgetParsedModel.QuizExplanationAudio,
-        //        };
-        //        await new CaptionWidgetProcessor(_languageList).QuizCaptionProcessWidges(widget, AnsDetailsCaption);
-        //        if (line.Type == LineTypeEnum.Caption && !widget.IsContainSelection)
-        //        {
-        //            QuizProperties.Instance.CorrectAnsDetails = widgetParsedModel.QuizCorrectAnswer;
-        //        }
-
-        //        else
-        //        {
-        //            var instance = GlobalConfigPropreties.Instance;
-
-        //            if (line.Text.Contains("Template<S>"))
-        //            {
-        //                (int right, int wrong) = TextExtrator.ExtractRightOrWorngAnsFromLine(line.Text);
-        //                instance.AddLine(line.Text.Replace("Template", "").Replace($"({right},{wrong})", ""));
-        //            }
-        //            else
-        //            {
-        //                instance.AddLine(line.Text.Replace("Template", ""));
-        //            }
-
-        //        }
-
-
-
-        //    }
-        //    _fileService.QuizSaveLineFiles(line);
-        //}
-        private void LoadTextFromFile(string filepath)
-        {
-
-            string directoryFilePath = filepath;
-            string directoryPath = Path.GetDirectoryName(directoryFilePath);
-
-            try
-            {
-
-                string[] files = Directory.GetFiles(directoryPath, "TEXTDATA.TXT", SearchOption.TopDirectoryOnly);
-                if (files.Length > 0)
-                {
-
-                    string filePath = files[0];
-                    byte[] fileBytes = File.ReadAllBytes(filePath);
-                    string fileContent = System.Text.Encoding.Unicode.GetString(fileBytes);
-                    // Remove the null bytes
-                    string cleanContent = fileContent.Replace("\0", "");
-                    var OffsetLenList = TextExtrator.GetOffset_Lengths(filepath);
-                    if (OffsetLenList.Count > 0)
-                    {
-
-                        var firstOffsetLen = OffsetLenList[0];
-                        int startIndex = firstOffsetLen.Offset;
-                        int length = firstOffsetLen.Length;
-                        if (startIndex + length <= fileContent.Length)
-                        {
-                            extractedText = cleanContent.Substring(startIndex + 1, length);
-
-                        }
-
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error reading file: " + ex.Message);
-            }
-        }
-
-        private void LoadCorrectAns(string filePath)
-        {
-            quizQuesText = TextExtrator.GetCorrectAns(filePath);
-        }
+       
 
         private void ProcessUploadedAudio(string uploadedAudioPath, string outputFilePath)
         {

@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsFormsApp1.Models;
@@ -14,71 +18,60 @@ namespace WindowsFormsApp1
             txt_dicfiles.Text = Properties.Settings.Default.txt_dicfiles;
             txt_OutFilePath.Text = Properties.Settings.Default.txt_OutFilePath;
         }
-
         private void btn_DicFiles_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-
-                openFileDialog.Title = "Select a File";
+                openFileDialog.Title = "Select Dictionary File";
                 openFileDialog.Filter = "Excel Files (*.xlsx;*.xls)|*.xlsx;*.xls|CSV Files (*.csv)|*.csv|All Files (*.*)|*.*";
-
                 openFileDialog.Multiselect = false;
+
+                string startFolder = GetBestStartFolder(txt_dicfiles.Text);
+
+                if (!string.IsNullOrWhiteSpace(startFolder) && Directory.Exists(startFolder))
+                {
+                    openFileDialog.InitialDirectory = startFolder;
+                }
+
+                if (File.Exists(txt_dicfiles.Text))
+                {
+                    openFileDialog.FileName = Path.GetFileName(txt_dicfiles.Text);
+                }
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    string selectedFilePath = openFileDialog.FileName;
-                    txt_dicfiles.Text = selectedFilePath;
-                    
-                    // Auto set output folder
-                    string folderPath = Path.GetDirectoryName(selectedFilePath);
+                    txt_dicfiles.Text = openFileDialog.FileName;
 
-                    if (!string.IsNullOrWhiteSpace(folderPath))
-                    {
-                        txt_OutFilePath.Text = folderPath;
-                        
-                    }
-                    // Create original backup
-                    //CreateOriginalCopy(selectedFilePath, folderPath);
+                    Properties.Settings.Default.txt_dicfiles = txt_dicfiles.Text.Trim();
+                    Properties.Settings.Default.Save();
                 }
             }
         }
-        private void CreateOriginalCopy(string sourceFilePath, string folderPath)
-        {
-            try
-            {
-                string fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourceFilePath);
-                string extension = Path.GetExtension(sourceFilePath);
-
-                // 👉 Add "_original"
-                string backupFileName = fileNameWithoutExt + "_original" + extension;
-
-                string backupFilePath = Path.Combine(folderPath, backupFileName);
-
-                File.Copy(sourceFilePath, backupFilePath, true);
-
-
-
-            }
-            catch (Exception ex)
-            {
-                AppendLog("Excel Original creation failed: " + ex.Message);
-            }
-        }
-
         private void SDataOutPut_Click(object sender, EventArgs e)
         {
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
-                folderDialog.Description = "Select a Folder";
+                folderDialog.Description = "Select Output Folder";
                 folderDialog.ShowNewFolderButton = true;
+
+                string startFolder = GetBestStartFolder(txt_OutFilePath.Text);
+
+                if (!string.IsNullOrWhiteSpace(startFolder) && Directory.Exists(startFolder))
+                {
+                    folderDialog.SelectedPath = startFolder;
+                }
 
                 if (folderDialog.ShowDialog() == DialogResult.OK)
                 {
                     txt_OutFilePath.Text = folderDialog.SelectedPath;
+
+                    Properties.Settings.Default.txt_OutFilePath = txt_OutFilePath.Text.Trim();
+                    Properties.Settings.Default.Save();
                 }
             }
         }
+
+
 
         private void Back_button_Click(object sender, EventArgs e)
         {
@@ -154,7 +147,7 @@ namespace WindowsFormsApp1
             {
                 Btn_Convert.Enabled = true;
             }
-            
+
 
         }
 
@@ -170,6 +163,33 @@ namespace WindowsFormsApp1
             txt_DicuserMessage.SelectionStart = txt_DicuserMessage.Text.Length;
             txt_DicuserMessage.ScrollToCaret();
             Application.DoEvents();
+        }
+
+
+        private string GetBestStartFolder(string currentPath)
+        {
+            if (!string.IsNullOrWhiteSpace(currentPath))
+            {
+                if (Directory.Exists(currentPath))
+                    return currentPath;
+
+                if (File.Exists(currentPath))
+                    return Path.GetDirectoryName(currentPath);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.txt_OutFilePath) &&
+                Directory.Exists(Properties.Settings.Default.txt_OutFilePath))
+            {
+                return Properties.Settings.Default.txt_OutFilePath;
+            }
+
+            if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.txt_dicfiles) &&
+                File.Exists(Properties.Settings.Default.txt_dicfiles))
+            {
+                return Path.GetDirectoryName(Properties.Settings.Default.txt_dicfiles);
+            }
+
+            return Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         }
 
     }

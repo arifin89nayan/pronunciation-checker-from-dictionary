@@ -173,7 +173,8 @@ namespace WindowsFormsApp1
                 quizService.BuildTextData(QuizProperties.Instance, container.Widgets.First());
 
                 var csvGenerator = new CsvGenerator();
-                csvGenerator.UpdateCSVFile(System.IO.Path.Combine(GlobalProperties.OutputPath, "CONTENTINFO.CSV"), QuizProperties.Instance);
+                csvGenerator.UpdateCSVFile22(System.IO.Path.Combine(GlobalProperties.OutputPath, "CONTENTINFO.CSV"), QuizProperties.Instance);
+               
                 contentFilesGenerated = true;
             }
 

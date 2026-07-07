@@ -26,43 +26,7 @@ namespace WindowsFormsApp1.Services
 
         }
 
-        //public string GenerateTextDateContentQuestion(QuestionData data)
-        //{
-        //    // Check if data is null or properties are null/empty
-        //    if (data == null)
-        //    {
-        //        throw new ArgumentNullException(nameof(data), "The TextData object cannot be null.");
-        //    }
-        //    if (string.IsNullOrEmpty(data.Key) || string.IsNullOrEmpty(data.Question))
-        //    {
-        //        return "Invalid data: Key or Question is missing.";
-        //    }
-
-        //    // Construct the question
-        //    string Question = $"{data.Key}{data.Question}";
-        //    return Question;
-        //}
-
-
-        //public bool BuildTextData(TextData textData)
-        //{
-        //    try
-        //    {
-        //        var textDatePath = Path.Combine(GlobalProperties.OutputPath, "TEXTDATA.TXT");
-        //        var content = GenerateTextDateContent(textData);
-        //        byte[] unicodeBytes = Encoding.Unicode.GetBytes(content);
-        //        File.WriteAllBytes(textDatePath, unicodeBytes);
-        //        //File.WriteAllText(textDatePath, content,Encoding.UTF8);
-
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return false;
-                 
-        //    }
-
-        //}
+        
 
         public bool BuildTextData(Quiz quiz, Widget widget)
         {

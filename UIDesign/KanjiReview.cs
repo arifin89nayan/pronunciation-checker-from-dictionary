@@ -15,6 +15,8 @@ namespace WindowsFormsApp1.UIDesign
         private readonly string _fixedListPath;
 
         private DataGridView dgvKanji;
+        private ComboBox cmbFilter;
+        private Label lblFilter;
         private Button btnSelectReviewRequired;
         private Button btnSaveApproved;
         private Button btnClose;
@@ -157,6 +159,106 @@ namespace WindowsFormsApp1.UIDesign
                 this.Close();
             };
             this.Controls.Add(btnClose);
+            BuildFilterControls();
+        }
+        private void BuildFilterControls()
+        {
+            lblFilter = new Label();
+            lblFilter.AutoSize = true;
+            lblFilter.Text = "Select Filter";
+            lblFilter.Font = new Font("Segoe UI", 11F);
+            lblFilter.ForeColor = Color.FromArgb(170, 176, 188);
+            lblFilter.BackColor = Color.Transparent;
+            lblFilter.Location = new Point(pnlHeader.Width - 320, 20);
+            lblFilter.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            pnlHeader.Controls.Add(lblFilter);
+
+            cmbFilter = new ComboBox();
+            cmbFilter.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbFilter.FlatStyle = FlatStyle.Flat;
+            cmbFilter.Font = new Font("Segoe UI", 12F);
+            cmbFilter.Size = new Size(280, 33);
+            cmbFilter.Location = new Point(pnlHeader.Width - 320, 52);
+            cmbFilter.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            cmbFilter.Items.Add("All");
+            cmbFilter.Items.Add("High difficulty");
+            cmbFilter.Items.Add("Medium difficulty");
+            cmbFilter.Items.Add("Low difficulty");
+            cmbFilter.Items.Add("New words");
+            
+            cmbFilter.SelectedIndex = 0;
+
+            cmbFilter.SelectedIndexChanged += cmbFilter_SelectedIndexChanged;
+            pnlHeader.Controls.Add(cmbFilter);
+            cmbFilter.BringToFront();
+        }
+
+        private void cmbFilter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            if (dgvKanji == null || cmbFilter == null)
+                return;
+
+            string filter = cmbFilter.SelectedItem as string ?? "All";
+
+            dgvKanji.EndEdit();
+
+            // A row cannot be hidden while it is the current cell's row.
+            dgvKanji.CurrentCell = null;
+
+            dgvKanji.SuspendLayout();
+
+            foreach (DataGridViewRow row in dgvKanji.Rows)
+            {
+                Inputtext.KanjiItem item = row.Tag as Inputtext.KanjiItem;
+
+                if (item == null)
+                {
+                    row.Visible = true;
+                    continue;
+                }
+
+                string difficulty = (item.Difficulty ?? "").Trim().ToLowerInvariant();
+                string status = (item.DictionaryStatus ?? "").Trim().ToLowerInvariant();
+
+                bool visible;
+
+                switch (filter)
+                {
+                    case "High difficulty":
+                        visible = difficulty == "high";
+                        break;
+
+                    case "Medium difficulty":
+                        visible = difficulty == "medium";
+                        break;
+
+                    case "Low difficulty":
+                        visible = difficulty == "low";
+                        break;
+
+                    case "New words":
+                        visible = status == "new";
+                        break;
+
+                    //case "Conflicts":
+                    //    visible = status == "conflict";
+                    //    break;
+
+                    default: // "All"
+                        visible = true;
+                        break;
+                }
+
+                row.Visible = visible;
+            }
+
+            dgvKanji.ResumeLayout();
         }
 
         private void LoadKanjiList()

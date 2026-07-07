@@ -27,8 +27,8 @@ namespace WindowsFormsApp1
             //Application.Run(new TestMain());
             //AppConfig config = AppConfig.Load();
             //AppState state = new AppState(config);
-            Application.Run(new Inputtext());
-            //Application.Run(new NewStartingForm());
+            //Application.Run(new Inputtext());
+            Application.Run(new NewStartingForm());
 
         }
     }

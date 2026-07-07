@@ -16,16 +16,19 @@ namespace WindowsFormsApp1.UIDesign
     public partial class Inputtext : Form
     {
         private readonly ScriptProcessingAgent _agent = new ScriptProcessingAgent();
+        private static readonly object _logLock = new object();
+        private string _logFilePath;
 
         public Inputtext()
         {
             InitializeComponent();
+            txt_FixedList.Text = Properties.Settings.Default.Fixed_List;
 
-            txt_FixedList.Text = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
-                "Resources",
-                "fixed_list.xlsx"
-            );
+            //txt_FixedList.Text = Path.Combine(
+            //    AppDomain.CurrentDomain.BaseDirectory,
+            //    "Resources",
+            //    "fixed_list.xlsx"
+            //);
         }
 
         // ---------------------------------------------------------------
@@ -199,13 +202,33 @@ namespace WindowsFormsApp1.UIDesign
 
             return ordered;
         }
+        private string GetLogFilePath()
+        {
+            if (!string.IsNullOrEmpty(_logFilePath))
+                return _logFilePath;
 
+            // LogData folder inside the application folder (bin\Debug\LogData while developing).
+            string logFolder = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "LogData");
+
+            Directory.CreateDirectory(logFolder);
+
+            // One file per day: ProcessingLog_20260702.txt
+            string fileName = "ProcessingLog_" + DateTime.Now.ToString("yyyyMMdd") + ".txt";
+
+            _logFilePath = Path.Combine(logFolder, fileName);
+            return _logFilePath;
+        }
         // ---------------------------------------------------------------
         // Start button
         // ---------------------------------------------------------------
 
         private async void StartExractBtn_Click(object sender, EventArgs e)
         {
+            string FixedListpath = txt_FixedList.Text.Trim() ?? "";
+            Properties.Settings.Default.Fixed_List = FixedListpath;
+            Properties.Settings.Default.Save();
             if (string.IsNullOrWhiteSpace(Txt_Input.Text))
             {
                 MessageBox.Show("Please input Japanese text first.");
@@ -216,6 +239,7 @@ namespace WindowsFormsApp1.UIDesign
             {
                 StartExractBtn.Enabled = false;
                 Txt_Msg.Clear();
+                Log("==================== NEW EXTRACTION RUN ====================");
 
                 string fixedListPath = txt_FixedList.Text.Trim();
                 string inputText = Txt_Input.Text.Trim();
@@ -319,8 +343,24 @@ namespace WindowsFormsApp1.UIDesign
 
         private void Log(string message)
         {
-            Txt_Msg.AppendText("[" + DateTime.Now.ToString("HH:mm:ss") + "] " +
-                               message + Environment.NewLine);
+            string line = "[" + DateTime.Now.ToString("HH:mm:ss") + "] " + message;
+
+            // 1. Show in the Processing Log console (unchanged behavior).
+            Txt_Msg.AppendText(line + Environment.NewLine);
+
+            // 2. Append to the log file. Logging must never break the pipeline,
+            //    so file errors are swallowed silently.
+            try
+            {
+                lock (_logLock)
+                {
+                    File.AppendAllText(GetLogFilePath(), line + Environment.NewLine, Encoding.UTF8);
+                }
+            }
+            catch
+            {
+                // Ignore file logging errors (locked file, permissions, etc.).
+            }
         }
 
         // ---------------------------------------------------------------

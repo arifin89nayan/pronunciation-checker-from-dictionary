@@ -104,12 +104,22 @@ namespace WindowsFormsApp1
         {
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
-                folderDialog.Description = "Select a Folder";
+                folderDialog.Description = "Select Source Folder";
                 folderDialog.ShowNewFolderButton = true;
+
+                string startFolder = GetBestStartFolder(SlFileLocation.Text);
+
+                if (!string.IsNullOrWhiteSpace(startFolder) && Directory.Exists(startFolder))
+                {
+                    folderDialog.SelectedPath = startFolder;
+                }
 
                 if (folderDialog.ShowDialog() == DialogResult.OK)
                 {
                     SlFileLocation.Text = folderDialog.SelectedPath;
+
+                    Properties.Settings.Default.IbcSelectFile = SlFileLocation.Text.Trim();
+                    Properties.Settings.Default.Save();
                 }
             }
         }
@@ -118,18 +128,53 @@ namespace WindowsFormsApp1
         {
             using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
-                folderDialog.Description = "Select a Folder";
+                folderDialog.Description = "Select IBC Output Folder";
                 folderDialog.ShowNewFolderButton = true;
+
+                string startFolder = GetBestStartFolder(IbcfileLocation.Text);
+
+                if (!string.IsNullOrWhiteSpace(startFolder) && Directory.Exists(startFolder))
+                {
+                    folderDialog.SelectedPath = startFolder;
+                }
 
                 if (folderDialog.ShowDialog() == DialogResult.OK)
                 {
                     IbcfileLocation.Text = folderDialog.SelectedPath;
+
+                    Properties.Settings.Default.IbcOutputFile = IbcfileLocation.Text.Trim();
+                    Properties.Settings.Default.Save();
                 }
             }
         }
         private void button4_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+        private string GetBestStartFolder(string currentPath)
+        {
+            if (!string.IsNullOrWhiteSpace(currentPath))
+            {
+                if (Directory.Exists(currentPath))
+                    return currentPath;
+
+                if (File.Exists(currentPath))
+                    return Path.GetDirectoryName(currentPath);
+            }
+
+            if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.IbcSelectFile) &&
+                Directory.Exists(Properties.Settings.Default.IbcSelectFile))
+            {
+                return Properties.Settings.Default.IbcSelectFile;
+            }
+
+            if (!string.IsNullOrWhiteSpace(Properties.Settings.Default.IbcOutputFile) &&
+                Directory.Exists(Properties.Settings.Default.IbcOutputFile))
+            {
+                return Properties.Settings.Default.IbcOutputFile;
+            }
+
+            return Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         }
     }
 }
