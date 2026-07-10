@@ -356,6 +356,11 @@
     <Compile Include="Helper\PatternHelper.cs" />
     <Compile Include="Helper\PhonemeLexiconHelper.cs" />
     <Compile Include="Helper\WhisperPromptBuilder.cs" />
+    <Compile Include="LanguageProfiles\ChineseTaiwanProfile.cs" />
+    <Compile Include="LanguageProfiles\EnglishProfile.cs" />
+    <Compile Include="LanguageProfiles\ILanguageProfile.cs" />
+    <Compile Include="LanguageProfiles\JapaneseProfile.cs" />
+    <Compile Include="LanguageProfiles\LanguageRegistry.cs" />
     <Compile Include="Models\Animation\AnimationLineExtract.cs" />
     <Compile Include="Models\AudioQualityFinalResult.cs" />
     <Compile Include="Models\AutoConverters\LanguageParsedModel.cs" />

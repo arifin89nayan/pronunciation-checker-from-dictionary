@@ -9,19 +9,24 @@ using System.Windows.Forms;
 
 namespace WindowsFormsApp1.UIDesign
 {
+    /// <summary>
+    /// Generic "Reading Review" screen. Works for any language:
+    /// the reading column header, normalization, and Excel round-trip
+    /// all come from the ILanguageProfile.
+    /// </summary>
     public partial class KanjiReview : Form
     {
         private readonly List<Inputtext.KanjiItem> _kanjiList;
         private readonly string _fixedListPath;
+        private readonly ILanguageProfile _profile;
 
         private DataGridView dgvKanji;
-        private ComboBox cmbFilter;
-        private Label lblFilter;
         private Button btnSelectReviewRequired;
         private Button btnSaveApproved;
         private Button btnClose;
 
         public int SavedCount { get; private set; }
+
         public List<Inputtext.KanjiItem> ReviewedItems
         {
             get
@@ -30,6 +35,29 @@ namespace WindowsFormsApp1.UIDesign
                 return _kanjiList;
             }
         }
+
+        /// <summary>Backward-compatible constructor: Japanese.</summary>
+        public KanjiReview(List<Inputtext.KanjiItem> kanjiList, string fixedListPath)
+            : this(kanjiList, fixedListPath, LanguageRegistry.Default)
+        {
+        }
+
+        public KanjiReview(List<Inputtext.KanjiItem> kanjiList,
+                           string fixedListPath,
+                           ILanguageProfile profile)
+        {
+            InitializeComponent();
+
+            _kanjiList = kanjiList ?? new List<Inputtext.KanjiItem>();
+            _fixedListPath = fixedListPath;
+            _profile = profile ?? LanguageRegistry.Default;
+
+            this.Text = "Reading Review - " + _profile.DisplayName;
+
+            BuildKanjiGrid();
+            LoadKanjiList();
+        }
+
         private void SyncGridToItems()
         {
             foreach (DataGridViewRow row in dgvKanji.Rows)
@@ -39,11 +67,11 @@ namespace WindowsFormsApp1.UIDesign
                 if (item == null)
                     continue;
 
-                item.Word = JapaneseTextNormalizer.NormalizeText(
+                item.Word = _profile.NormalizeText(
                     Convert.ToString(row.Cells["word"].Value)
                 );
 
-                item.Hiragana = JapaneseTextNormalizer.ToHiragana(
+                item.Hiragana = _profile.NormalizeReading(
                     Convert.ToString(row.Cells["hiragana"].Value)
                 );
 
@@ -62,17 +90,6 @@ namespace WindowsFormsApp1.UIDesign
             }
         }
 
-        public KanjiReview(List<Inputtext.KanjiItem> kanjiList, string fixedListPath)
-        {
-            InitializeComponent();
-
-            _kanjiList = kanjiList ?? new List<Inputtext.KanjiItem>();
-            _fixedListPath = fixedListPath;
-
-            BuildKanjiGrid();
-            LoadKanjiList();
-        }
-
         private void dgvKanji_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0)
@@ -88,8 +105,8 @@ namespace WindowsFormsApp1.UIDesign
         private void BuildKanjiGrid()
         {
             dgvKanji = new DataGridView();
-            dgvKanji.Location = new Point(20, 100);
-            dgvKanji.Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 180);
+            dgvKanji.Location = new Point(20, 130);
+            dgvKanji.Size = new Size(this.ClientSize.Width - 40, this.ClientSize.Height - 240);
             dgvKanji.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             dgvKanji.AllowUserToAddRows = false;
             dgvKanji.RowHeadersVisible = false;
@@ -105,7 +122,7 @@ namespace WindowsFormsApp1.UIDesign
             dgvKanji.Columns.Add(chk);
 
             dgvKanji.Columns.Add("word", "Word");
-            dgvKanji.Columns.Add("hiragana", "Correct Hiragana");
+            dgvKanji.Columns.Add("hiragana", _profile.ReadingColumnHeader);
             dgvKanji.Columns.Add("source", "Source");
             dgvKanji.Columns.Add("status", "Status");
             dgvKanji.Columns.Add("model", "Model Reading");
@@ -151,7 +168,6 @@ namespace WindowsFormsApp1.UIDesign
             btnClose.Size = new Size(120, 40);
             btnClose.Location = new Point(this.ClientSize.Width - 150, this.ClientSize.Height - 60);
             btnClose.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            //btnClose.Click += delegate { this.Close(); };
             btnClose.Click += delegate
             {
                 SyncGridToItems();
@@ -159,106 +175,6 @@ namespace WindowsFormsApp1.UIDesign
                 this.Close();
             };
             this.Controls.Add(btnClose);
-            BuildFilterControls();
-        }
-        private void BuildFilterControls()
-        {
-            lblFilter = new Label();
-            lblFilter.AutoSize = true;
-            lblFilter.Text = "Select Filter";
-            lblFilter.Font = new Font("Segoe UI", 11F);
-            lblFilter.ForeColor = Color.FromArgb(170, 176, 188);
-            lblFilter.BackColor = Color.Transparent;
-            lblFilter.Location = new Point(pnlHeader.Width - 320, 20);
-            lblFilter.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            pnlHeader.Controls.Add(lblFilter);
-
-            cmbFilter = new ComboBox();
-            cmbFilter.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbFilter.FlatStyle = FlatStyle.Flat;
-            cmbFilter.Font = new Font("Segoe UI", 12F);
-            cmbFilter.Size = new Size(280, 33);
-            cmbFilter.Location = new Point(pnlHeader.Width - 320, 52);
-            cmbFilter.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-
-            cmbFilter.Items.Add("All");
-            cmbFilter.Items.Add("High difficulty");
-            cmbFilter.Items.Add("Medium difficulty");
-            cmbFilter.Items.Add("Low difficulty");
-            cmbFilter.Items.Add("New words");
-            
-            cmbFilter.SelectedIndex = 0;
-
-            cmbFilter.SelectedIndexChanged += cmbFilter_SelectedIndexChanged;
-            pnlHeader.Controls.Add(cmbFilter);
-            cmbFilter.BringToFront();
-        }
-
-        private void cmbFilter_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            ApplyFilter();
-        }
-
-        private void ApplyFilter()
-        {
-            if (dgvKanji == null || cmbFilter == null)
-                return;
-
-            string filter = cmbFilter.SelectedItem as string ?? "All";
-
-            dgvKanji.EndEdit();
-
-            // A row cannot be hidden while it is the current cell's row.
-            dgvKanji.CurrentCell = null;
-
-            dgvKanji.SuspendLayout();
-
-            foreach (DataGridViewRow row in dgvKanji.Rows)
-            {
-                Inputtext.KanjiItem item = row.Tag as Inputtext.KanjiItem;
-
-                if (item == null)
-                {
-                    row.Visible = true;
-                    continue;
-                }
-
-                string difficulty = (item.Difficulty ?? "").Trim().ToLowerInvariant();
-                string status = (item.DictionaryStatus ?? "").Trim().ToLowerInvariant();
-
-                bool visible;
-
-                switch (filter)
-                {
-                    case "High difficulty":
-                        visible = difficulty == "high";
-                        break;
-
-                    case "Medium difficulty":
-                        visible = difficulty == "medium";
-                        break;
-
-                    case "Low difficulty":
-                        visible = difficulty == "low";
-                        break;
-
-                    case "New words":
-                        visible = status == "new";
-                        break;
-
-                    //case "Conflicts":
-                    //    visible = status == "conflict";
-                    //    break;
-
-                    default: // "All"
-                        visible = true;
-                        break;
-                }
-
-                row.Visible = visible;
-            }
-
-            dgvKanji.ResumeLayout();
         }
 
         private void LoadKanjiList()
@@ -348,7 +264,7 @@ namespace WindowsFormsApp1.UIDesign
 
                     string word = Convert.ToString(row.Cells["word"].Value).Trim();
 
-                    string hiragana = JapaneseTextNormalizer.ToHiragana(
+                    string reading = _profile.NormalizeReading(
                         Convert.ToString(row.Cells["hiragana"].Value).Trim()
                     );
 
@@ -357,10 +273,10 @@ namespace WindowsFormsApp1.UIDesign
                     if (string.IsNullOrWhiteSpace(word))
                         continue;
 
-                    if (string.IsNullOrWhiteSpace(hiragana))
+                    if (string.IsNullOrWhiteSpace(reading))
                     {
                         MessageBox.Show(
-                            "Hiragana is empty for word: " + word,
+                            "Reading is empty for word: " + word,
                             "Validation Error",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Warning
@@ -370,8 +286,8 @@ namespace WindowsFormsApp1.UIDesign
 
                     approved.Add(new ApprovedWord
                     {
-                        Word = JapaneseTextNormalizer.NormalizeText(word),
-                        Hiragana = hiragana,
+                        Word = _profile.NormalizeText(word),
+                        Hiragana = reading,
                         Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "general" : difficulty
                     });
                 }
@@ -464,7 +380,7 @@ namespace WindowsFormsApp1.UIDesign
 
                 foreach (ApprovedWord item in approvedWords)
                 {
-                    string key = JapaneseTextNormalizer.NormalizeText(item.Word);
+                    string key = _profile.NormalizeText(item.Word);
 
                     if (rowMap.ContainsKey(key))
                     {
@@ -505,7 +421,7 @@ namespace WindowsFormsApp1.UIDesign
                 ws.Cell(1, 1).Value = "word";
 
             if (string.IsNullOrWhiteSpace(ws.Cell(1, 2).GetString()))
-                ws.Cell(1, 2).Value = "hiragana";
+                ws.Cell(1, 2).Value = "reading";
 
             if (string.IsNullOrWhiteSpace(ws.Cell(1, 3).GetString()))
                 ws.Cell(1, 3).Value = "difficulty";
@@ -519,8 +435,11 @@ namespace WindowsFormsApp1.UIDesign
 
         private Dictionary<string, int> BuildWordRowMap(IXLWorksheet ws)
         {
-            Dictionary<string, int> map =
-                new Dictionary<string, int>(StringComparer.Ordinal);
+            StringComparer cmp = _profile.UsesWordBoundaryMatching
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal;
+
+            Dictionary<string, int> map = new Dictionary<string, int>(cmp);
 
             IXLRow lastRow = ws.LastRowUsed();
 
@@ -529,7 +448,7 @@ namespace WindowsFormsApp1.UIDesign
 
             for (int row = 2; row <= lastRow.RowNumber(); row++)
             {
-                string word = JapaneseTextNormalizer.NormalizeText(
+                string word = _profile.NormalizeText(
                     ws.Cell(row, 1).GetString()
                 );
 
@@ -571,10 +490,8 @@ namespace WindowsFormsApp1.UIDesign
             {
                 dgvKanji.EndEdit();
 
-                // Save edited grid data into _kanjiList
                 SyncGridToItems();
 
-                // Optional check: no empty hiragana allowed
                 var missing = _kanjiList
                     .Where(x => !string.IsNullOrWhiteSpace(x.Word))
                     .Where(x => string.IsNullOrWhiteSpace(x.Hiragana))
@@ -584,9 +501,9 @@ namespace WindowsFormsApp1.UIDesign
                 if (missing.Count > 0)
                 {
                     MessageBox.Show(
-                        "Some words have empty hiragana. Please fix them first:\n\n" +
+                        "Some words have an empty reading. Please fix them first:\n\n" +
                         string.Join("\n", missing),
-                        "Missing Hiragana",
+                        "Missing Reading",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Warning
                     );

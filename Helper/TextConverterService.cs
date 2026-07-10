@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Interop;
@@ -128,33 +129,46 @@ namespace WindowsFormsApp1.Helper
                     ErrorLogger.LogError($"Dictionary file not found: {outputXmlPath}");
 
                 }
-                //bool regenerate = false;
+                //if(lang== "en-US" && !File.Exists(outputXmlPath))
+                //{
 
-                //if (!File.Exists(outputXmlPath))
-                //{
-                //    // No XML yet, must generate
-                //    regenerate = true;
-                //}
-                //else
-                //{
-                //    DateTime excelDate = File.GetLastWriteTimeUtc(dictPath);
-                //    DateTime xmlDate = File.GetLastWriteTimeUtc(outputXmlPath);
-
-                //    if (excelDate > xmlDate)
-                //    {
-                //        // Excel has changed since XML was generated
-                //        regenerate = true;
-                //    }
-                //}
-              
-                //if (regenerate)
-                //{
-                //    // Call your XML generation code
-                //    var newxmlfile = GenerateLexiconFromExcel(dictPath, outputXmlPath);
+                //    bool regenerate = !File.Exists(outputXmlPath) ||
+                //      File.GetLastWriteTimeUtc(dictPath) > File.GetLastWriteTimeUtc(outputXmlPath);
+                //    if (regenerate)
+                //        GenerateLexiconFromExcel(dictPath, outputXmlPath, lang);
 
                 //}
+                if (string.Equals(lang, "en-US", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!File.Exists(dictPath))
+                    {
+                        throw new FileNotFoundException(
+                            $"Dictionary Excel file not found: {dictPath}",
+                            dictPath);
+                    }
 
-                var helper = new PhonemeLexiconHelper(outputXmlPath);
+                    bool regenerate =
+                        !File.Exists(outputXmlPath) ||
+                        File.GetLastWriteTimeUtc(dictPath) >
+                        File.GetLastWriteTimeUtc(outputXmlPath);
+
+                    if (regenerate)
+                    {
+                        GenerateLexiconFromExcel(
+                            dictPath,
+                            outputXmlPath,
+                            lang);
+                    }
+                }
+
+
+                bool isSpaceDelimited = !lang.StartsWith("ja", StringComparison.OrdinalIgnoreCase)
+                     && !lang.StartsWith("zh", StringComparison.OrdinalIgnoreCase)
+                     && !lang.StartsWith("th", StringComparison.OrdinalIgnoreCase);
+
+                var helper = new PhonemeLexiconHelper(outputXmlPath, isSpaceDelimited);
+
+               // var helper = new PhonemeLexiconHelper(outputXmlPath);
                 // 2. Inject phoneme tags into your input text
                 string textWithPhonemes = helper.InjectPhonemes(inputText);
 
@@ -180,9 +194,107 @@ namespace WindowsFormsApp1.Helper
                 return false;
             }
         }
+        //XML generation code
+        public static string GenerateLexiconFromExcel(string excelPath, string outputXmlPath, string lang)
+        {
+            XNamespace ns = "http://www.w3.org/2005/01/pronunciation-lexicon";
+            bool isEnglish = lang.StartsWith("en", StringComparison.OrdinalIgnoreCase);
 
+            var lexicon = new XElement(ns + "lexicon",
+                new XAttribute("version", "1.0"),
+                new XAttribute("alphabet", isEnglish ? "ipa" : "sapi"),
+                new XAttribute(XNamespace.Xml + "lang", lang),
+                new XAttribute(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance"),
+                new XAttribute(XNamespace.Get("http://www.w3.org/2001/XMLSchema-instance") + "schemaLocation",
+                    "http://www.w3.org/2005/01/pronunciation-lexicon http://www.w3.org/TR/2007/CR-pronunciation-lexicon-20071212/pls.xsd")
+            );
 
-      
+            var seenGraphemes = new HashSet<string>(
+                isEnglish ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+
+            using (var workbook = new XLWorkbook(excelPath))
+            {
+                var worksheet = workbook.Worksheet(1);
+                var range = worksheet.RangeUsed();
+                if (range == null)
+                {
+                    ErrorLogger.LogError($"Excel sheet is empty: {excelPath}");
+                    throw new InvalidOperationException("Dictionary Excel sheet is empty.");
+                }
+
+                foreach (var row in range.RowsUsed())
+                {
+                    string grapheme = NormalizeKey(row.Cell(1).GetString());
+                    string reading = NormalizePhoneme(row.Cell(2).GetString());
+
+                    if (string.IsNullOrWhiteSpace(grapheme) || string.IsNullOrWhiteSpace(reading))
+                        continue;
+
+                    if (!seenGraphemes.Add(grapheme))
+                    {
+                        ErrorLogger.LogError($"Duplicate grapheme skipped: \"{grapheme}\"");
+                        continue;
+                    }
+
+                    // English readings are plain-text respellings -> alias
+                    // Japanese readings are SAPI phoneme strings -> phoneme
+                    var readingElement = isEnglish
+                        ? new XElement(ns + "alias", reading)
+                        : new XElement(ns + "phoneme", reading);
+
+                    lexicon.Add(new XElement(ns + "lexeme",
+                        new XElement(ns + "grapheme", grapheme),
+                        readingElement));
+                }
+            }
+
+            var doc = new XDocument(new XDeclaration("1.0", "utf-8", "yes"), lexicon);
+            doc.Save(outputXmlPath);
+            return outputXmlPath;
+        }
+        private static string NormalizeKey(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            // Remove spaces from the beginning and end.
+            value = value.Trim();
+
+            // Convert Japanese full-width spaces to normal spaces.
+            value = value.Replace("\u3000", " ");
+
+            // Replace tabs, line breaks, and repeated spaces with one space.
+            value = Regex.Replace(value, @"\s+", " ");
+
+            // Remove invisible zero-width characters that may come from Excel.
+            value = value
+                .Replace("\u200B", string.Empty) // Zero-width space
+                .Replace("\u200C", string.Empty) // Zero-width non-joiner
+                .Replace("\u200D", string.Empty) // Zero-width joiner
+                .Replace("\uFEFF", string.Empty); // BOM / zero-width no-break space
+
+            return value.Trim();
+        }
+        private static string NormalizePhoneme(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            value = value.Trim();
+
+            // Convert full-width spaces to normal spaces.
+            value = value.Replace("\u3000", " ");
+
+            // Replace repeated spaces with one space.
+            value = Regex.Replace(value, @"\s+", " ");
+
+            return value;
+        }
+
         public static TextValue MapQuizModelToTextValue(QuizParserModel quizModel, List<LanguageParsedModel> languageVoiceMap)
         {
             var matchLanguage = languageVoiceMap

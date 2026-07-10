@@ -12,32 +12,37 @@ namespace WindowsFormsApp1.UIDesign
     {
         private readonly string _originalScript;
         private readonly TtsPipelineResult _result;
+        private readonly ILanguageProfile _profile;
 
         private string _lastAudioPath;
         private SoundPlayer _player;
-
-        // Standard ja-JP neural voices (reliably support <sub> alias control).
-        private static readonly string[] JapaneseVoices =
-        {
-            "ja-JP-NanamiNeural",
-            "ja-JP-KeitaNeural",
-            "ja-JP-AoiNeural",
-            "ja-JP-DaichiNeural",
-            "ja-JP-MayuNeural",
-            "ja-JP-NaokiNeural",
-            "ja-JP-ShioriNeural"
-        };
 
         // Active-tab colors
         private static readonly Color ActiveTab = Color.FromArgb(255, 128, 0);
         private static readonly Color InactiveTab = Color.FromArgb(70, 76, 92);
 
+        /// <summary>Backward-compatible constructor: Japanese.</summary>
         public TtsResultPreview(string originalScript, TtsPipelineResult result)
+            : this(originalScript, result, LanguageRegistry.Default)
+        {
+        }
+
+        public TtsResultPreview(string originalScript,
+                                TtsPipelineResult result,
+                                ILanguageProfile profile)
         {
             InitializeComponent();
 
             _originalScript = originalScript;
             _result = result;
+
+            // Prefer the profile stored in the result; fall back to the parameter.
+            _profile = result != null && result.Profile != null
+                ? result.Profile
+                : (profile ?? LanguageRegistry.Default);
+
+            this.Text = "TTS Result Preview - " + _profile.DisplayName;
+            lblVoice.Text = "Azure Voice (" + _profile.LocaleCode + ")";
 
             BuildTtsColumns();
             PopulateVoices();
@@ -46,25 +51,29 @@ namespace WindowsFormsApp1.UIDesign
         }
 
         // -----------------------------------------------------------------
-        // Voice selection
+        // Voice selection (populated from the language profile)
         // -----------------------------------------------------------------
 
         private void PopulateVoices()
         {
             cmbVoice.Items.Clear();
-            foreach (var v in JapaneseVoices)
+
+            foreach (var v in _profile.Voices)
                 cmbVoice.Items.Add(v);
 
-            // Default to whatever voice the SSML was built with; else Nanami.
+            // Default to whatever voice the SSML was built with; else profile default.
             string current = ExtractVoiceFromSsml(_result?.Ssml);
             int idx = string.IsNullOrEmpty(current) ? -1 : cmbVoice.Items.IndexOf(current);
 
             if (idx < 0 && !string.IsNullOrEmpty(current))
             {
-                // SSML uses a voice not in our standard list; add it so it stays selectable.
+                // SSML uses a voice not in the profile list; add it so it stays selectable.
                 cmbVoice.Items.Insert(0, current);
                 idx = 0;
             }
+
+            if (idx < 0)
+                idx = cmbVoice.Items.IndexOf(_profile.DefaultVoice);
 
             cmbVoice.SelectedIndex = idx >= 0 ? idx : 0;
         }
@@ -80,7 +89,7 @@ namespace WindowsFormsApp1.UIDesign
 
         private string SelectedVoice
         {
-            get { return cmbVoice.SelectedItem as string ?? JapaneseVoices[0]; }
+            get { return cmbVoice.SelectedItem as string ?? _profile.DefaultVoice; }
         }
 
         // Returns the SSML with the <voice name="..."> swapped to the selected voice.
@@ -98,7 +107,6 @@ namespace WindowsFormsApp1.UIDesign
 
         private void cmbVoice_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // If the SSML view is open, refresh it so the preview matches what will be sent.
             if (txtSsml.Visible)
                 txtSsml.Text = SsmlWithSelectedVoice() ?? "No SSML generated.";
 
@@ -172,7 +180,7 @@ namespace WindowsFormsApp1.UIDesign
 
             dgvTtsList.Columns.Add("no", "No");
             dgvTtsList.Columns.Add("word", "Word");
-            dgvTtsList.Columns.Add("hiragana", "Hiragana");
+            dgvTtsList.Columns.Add("hiragana", _profile.ReadingColumnHeader);
             dgvTtsList.Columns.Add("source", "Source");
 
             dgvTtsList.Columns["no"].FillWeight = 12;
@@ -264,9 +272,15 @@ namespace WindowsFormsApp1.UIDesign
                     "TTSAgent",
                     "Audio");
 
-                string voiceTag = SelectedVoice.Replace("ja-JP-", "").Replace("Neural", "");
+                // File names now carry BOTH language and voice, e.g.
+                // tts_en_Jenny_20260709_101500.wav
+                string voiceTag = SelectedVoice
+                    .Replace(_profile.LocaleCode + "-", "")
+                    .Replace("Neural", "");
+
                 string outputFileName =
-                    "tts_" + voiceTag + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".wav";
+                    "tts_" + _profile.Key + "_" + voiceTag + "_" +
+                    DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".wav";
 
                 var service = new AzureTtsSimpleService();
 

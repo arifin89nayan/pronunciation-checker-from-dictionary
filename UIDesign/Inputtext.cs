@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -16,19 +17,102 @@ namespace WindowsFormsApp1.UIDesign
     public partial class Inputtext : Form
     {
         private readonly ScriptProcessingAgent _agent = new ScriptProcessingAgent();
-        private static readonly object _logLock = new object();
-        private string _logFilePath;
+
+        // Language selector (created in code so the Designer file stays untouched).
+        private ComboBox cmbLanguage;
+        private Label lblLanguage;
 
         public Inputtext()
         {
             InitializeComponent();
-            txt_FixedList.Text = Properties.Settings.Default.Fixed_List;
+            BuildLanguageSelector();
 
-            //txt_FixedList.Text = Path.Combine(
-            //    AppDomain.CurrentDomain.BaseDirectory,
-            //    "Resources",
-            //    "fixed_list.xlsx"
-            //);
+            txt_FixedList.Text = Properties.Settings.Default.Fixed_List;
+        }
+
+        // ---------------------------------------------------------------
+        // Language selection
+        // ---------------------------------------------------------------
+
+        private ILanguageProfile CurrentProfile
+        {
+            get
+            {
+                return cmbLanguage.SelectedItem as ILanguageProfile
+                       ?? LanguageRegistry.Default;
+            }
+        }
+
+        private void BuildLanguageSelector()
+        {
+            lblLanguage = new Label();
+            lblLanguage.AutoSize = true;
+            lblLanguage.Font = new Font("Segoe UI", 11F);
+            lblLanguage.ForeColor = Color.FromArgb(170, 176, 188);
+            lblLanguage.Text = "Language";
+            lblLanguage.Location = new Point(pnlHeader.Width - 480, 18);
+            lblLanguage.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            pnlHeader.Controls.Add(lblLanguage);
+
+            cmbLanguage = new ComboBox();
+            cmbLanguage.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbLanguage.FlatStyle = FlatStyle.Flat;
+            cmbLanguage.Font = new Font("Segoe UI", 12F);
+            cmbLanguage.Location = new Point(pnlHeader.Width - 480, 50);
+            cmbLanguage.Size = new Size(430, 33);
+            cmbLanguage.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+            foreach (var profile in LanguageRegistry.All)
+                cmbLanguage.Items.Add(profile);   // ToString() -> DisplayName
+
+            // Restore last-used language; default = Japanese.
+            string savedKey = "";
+            try { savedKey = Properties.Settings.Default.Language; } catch { }
+
+            ILanguageProfile restore = LanguageRegistry.GetByKey(savedKey);
+            cmbLanguage.SelectedItem = restore;
+
+            if (cmbLanguage.SelectedIndex < 0)
+                cmbLanguage.SelectedIndex = 0;
+
+            cmbLanguage.SelectedIndexChanged += cmbLanguage_SelectedIndexChanged;
+            pnlHeader.Controls.Add(cmbLanguage);
+        }
+
+        private void cmbLanguage_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ILanguageProfile p = CurrentProfile;
+
+            // One dictionary file per language. If the current path points at
+            // another language's default file, suggest this language's file
+            // in the same folder. Never overwrite a custom path silently.
+            string current = txt_FixedList.Text.Trim();
+
+            if (!string.IsNullOrWhiteSpace(current))
+            {
+                string fileName = Path.GetFileName(current);
+                bool looksLikeDefaultOfOtherLanguage =
+                    LanguageRegistry.All.Any(x =>
+                        x.Key != p.Key &&
+                        string.Equals(fileName, x.DefaultFixedListFileName,
+                                      StringComparison.OrdinalIgnoreCase));
+
+                if (looksLikeDefaultOfOtherLanguage)
+                {
+                    string dir = Path.GetDirectoryName(current);
+                    txt_FixedList.Text = Path.Combine(dir ?? "", p.DefaultFixedListFileName);
+                }
+            }
+
+            Log("Language switched to " + p.DisplayName +
+                ". Fixed list expected: " + p.DefaultFixedListFileName);
+
+            try
+            {
+                Properties.Settings.Default.Language = p.Key;
+                Properties.Settings.Default.Save();
+            }
+            catch { /* Add a string setting named "Language" in project settings. */ }
         }
 
         // ---------------------------------------------------------------
@@ -38,7 +122,7 @@ namespace WindowsFormsApp1.UIDesign
         public class FixedWord
         {
             public string Word { get; set; }
-            public string Hiragana { get; set; }
+            public string Hiragana { get; set; }    // reading, in any language's notation
             public string Difficulty { get; set; }
         }
 
@@ -46,7 +130,7 @@ namespace WindowsFormsApp1.UIDesign
         {
             public string Word { get; set; }
 
-            // Final reading used for TTS.
+            // Final reading used for TTS (hiragana / IPA / pinyin depending on language).
             public string Hiragana { get; set; }
 
             public string Difficulty { get; set; }
@@ -60,7 +144,7 @@ namespace WindowsFormsApp1.UIDesign
 
             public bool ReviewRequired { get; set; }
 
-            // Only used when ChatGPT disagrees with Fixed List.
+            // Only used when the model disagrees with the Fixed List.
             public string ModelHiragana { get; set; }
 
             public bool SaveToFixedList { get; set; }
@@ -88,9 +172,14 @@ namespace WindowsFormsApp1.UIDesign
         private List<KanjiItem> MergeWithConflicts(
             FixedDictionaryService matcher,
             List<FixedWord> fixedMatches,
-            List<ApiKanjiItem> apiItems)
+            List<ApiKanjiItem> apiItems,
+            ILanguageProfile profile)
         {
-            var byWord = new Dictionary<string, KanjiItem>(StringComparer.Ordinal);
+            StringComparer cmp = profile.UsesWordBoundaryMatching
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal;
+
+            var byWord = new Dictionary<string, KanjiItem>(cmp);
             var ordered = new List<KanjiItem>();
 
             // 1. Fixed words found locally.
@@ -99,7 +188,7 @@ namespace WindowsFormsApp1.UIDesign
                 if (fw == null || string.IsNullOrWhiteSpace(fw.Word))
                     continue;
 
-                string key = JapaneseTextNormalizer.NormalizeText(fw.Word);
+                string key = profile.NormalizeText(fw.Word);
 
                 if (byWord.ContainsKey(key))
                     continue;
@@ -107,7 +196,7 @@ namespace WindowsFormsApp1.UIDesign
                 var item = new KanjiItem
                 {
                     Word = key,
-                    Hiragana = JapaneseTextNormalizer.ToHiragana(fw.Hiragana),
+                    Hiragana = profile.NormalizeReading(fw.Hiragana),
                     Difficulty = string.IsNullOrWhiteSpace(fw.Difficulty) ? "fixed" : fw.Difficulty,
                     Source = "Fixed",
                     DictionaryStatus = "matched",
@@ -121,25 +210,25 @@ namespace WindowsFormsApp1.UIDesign
                 ordered.Add(item);
             }
 
-            // 2. ChatGPT output.
+            // 2. Model output.
             foreach (var api in apiItems ?? new List<ApiKanjiItem>())
             {
                 if (api == null || string.IsNullOrWhiteSpace(api.Word))
                     continue;
 
-                string key = JapaneseTextNormalizer.NormalizeText(api.Word);
-                string modelReading = JapaneseTextNormalizer.ToHiragana(api.Hiragana);
+                string key = profile.NormalizeText(api.Word);
+                string modelReading = profile.NormalizeReading(api.Hiragana);
 
                 if (string.IsNullOrWhiteSpace(key))
                     continue;
 
                 FixedWord fw;
 
-                // If ChatGPT outputs something already in fixed dictionary,
-                // fixed dictionary reading wins.
+                // If the model outputs something already in the fixed dictionary,
+                // the fixed dictionary reading wins.
                 if (matcher.TryGet(key, out fw))
                 {
-                    string fixedReading = JapaneseTextNormalizer.ToHiragana(fw.Hiragana);
+                    string fixedReading = profile.NormalizeReading(fw.Hiragana);
 
                     KanjiItem existing;
 
@@ -163,7 +252,7 @@ namespace WindowsFormsApp1.UIDesign
                     }
 
                     if (!string.IsNullOrWhiteSpace(modelReading) &&
-                        !JapaneseTextNormalizer.ReadingsEqual(fixedReading, modelReading))
+                        !string.Equals(fixedReading, modelReading, StringComparison.Ordinal))
                     {
                         existing.DictionaryStatus = "conflict";
                         existing.ReviewRequired = true;
@@ -190,7 +279,7 @@ namespace WindowsFormsApp1.UIDesign
                     DictionaryStatus = "new",
                     ReviewRequired = true,
                     Reason = string.IsNullOrWhiteSpace(api.Reason)
-                        ? "New word suggested by ChatGPT. Human review required before entering dictionary."
+                        ? "New word suggested by the model. Human review required before entering dictionary."
                         : api.Reason,
                     SaveToFixedList = true,
                     ModelHiragana = modelReading
@@ -202,24 +291,7 @@ namespace WindowsFormsApp1.UIDesign
 
             return ordered;
         }
-        private string GetLogFilePath()
-        {
-            if (!string.IsNullOrEmpty(_logFilePath))
-                return _logFilePath;
 
-            // LogData folder inside the application folder (bin\Debug\LogData while developing).
-            string logFolder = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
-                "LogData");
-
-            Directory.CreateDirectory(logFolder);
-
-            // One file per day: ProcessingLog_20260702.txt
-            string fileName = "ProcessingLog_" + DateTime.Now.ToString("yyyyMMdd") + ".txt";
-
-            _logFilePath = Path.Combine(logFolder, fileName);
-            return _logFilePath;
-        }
         // ---------------------------------------------------------------
         // Start button
         // ---------------------------------------------------------------
@@ -229,9 +301,10 @@ namespace WindowsFormsApp1.UIDesign
             string FixedListpath = txt_FixedList.Text.Trim() ?? "";
             Properties.Settings.Default.Fixed_List = FixedListpath;
             Properties.Settings.Default.Save();
+
             if (string.IsNullOrWhiteSpace(Txt_Input.Text))
             {
-                MessageBox.Show("Please input Japanese text first.");
+                MessageBox.Show("Please input text first.");
                 return;
             }
 
@@ -239,15 +312,16 @@ namespace WindowsFormsApp1.UIDesign
             {
                 StartExractBtn.Enabled = false;
                 Txt_Msg.Clear();
-                Log("==================== NEW EXTRACTION RUN ====================");
+
+                ILanguageProfile profile = CurrentProfile;
 
                 string fixedListPath = txt_FixedList.Text.Trim();
                 string inputText = Txt_Input.Text.Trim();
 
-                Log("Start processing...");
+                Log("Start processing... [" + profile.DisplayName + "]");
                 Log("Loading fixed dictionary...");
 
-                FixedDictionaryService matcher = _agent.GetMatcher(fixedListPath);
+                FixedDictionaryService matcher = _agent.GetMatcher(fixedListPath, profile);
 
                 Log("Fixed dictionary ready: " + matcher.Count + " words.");
 
@@ -257,27 +331,27 @@ namespace WindowsFormsApp1.UIDesign
                 );
 
                 Log("Fixed words masked out of script: " + fixedMatches.Count);
-                Log("Masked text for ChatGPT:");
+                Log("Masked text for the model:");
                 Log(maskedText);
 
                 List<ApiKanjiItem> apiItems;
 
-                if (!JapaneseTextNormalizer.ContainsKanjiExceptFixedMarker(maskedText))
+                if (!profile.ContainsUnresolvedTokens(maskedText))
                 {
                     apiItems = new List<ApiKanjiItem>();
-                    Log("No unknown kanji remains. ChatGPT skipped.");
+                    Log("No unresolved tokens remain. Model call skipped.");
                 }
                 else
                 {
-                    Log("Sending only unknown/difficult kanji text to ChatGPT...");
+                    Log("Sending only unknown/difficult text to the model...");
 
-                    apiItems = await _agent.ExtractKanjiAsync(maskedText);
+                    apiItems = await _agent.ExtractKanjiAsync(maskedText, profile);
 
                     Log("Model returned " + apiItems.Count + " candidate term(s).");
                 }
 
                 List<KanjiItem> kanjiList =
-                    MergeWithConflicts(matcher, fixedMatches, apiItems);
+                    MergeWithConflicts(matcher, fixedMatches, apiItems, profile);
 
                 int fixedCount = kanjiList.Count(k => k.DictionaryStatus == "matched");
                 int newCount = kanjiList.Count(k => k.DictionaryStatus == "new");
@@ -289,44 +363,36 @@ namespace WindowsFormsApp1.UIDesign
 
                 if (kanjiList.Count == 0)
                 {
-                    MessageBox.Show("No kanji terms found.");
+                    MessageBox.Show("No terms found.");
                     return;
                 }
 
-                Log("Opening kanji review window...");
+                Log("Opening review window...");
 
-                //KanjiReview popup = new KanjiReview(kanjiList, fixedListPath);
-                //popup.ShowDialog();
-
-                //Log("Kanji review completed. Saved/updated: " + popup.SavedCount + " word(s).");
-                KanjiReview popup = new KanjiReview(kanjiList, fixedListPath);
+                KanjiReview popup = new KanjiReview(kanjiList, fixedListPath, profile);
 
                 DialogResult reviewResult = popup.ShowDialog();
 
                 if (reviewResult != DialogResult.OK)
                 {
-                    Log("Kanji review cancelled/back.");
+                    Log("Review cancelled/back.");
                     return;
                 }
 
                 List<KanjiItem> reviewedItems = popup.ReviewedItems;
 
-                Log("Kanji review completed. Saved/updated: " + popup.SavedCount + " word(s).");
+                Log("Review completed. Saved/updated: " + popup.SavedCount + " word(s).");
 
-                // Step 8-13
                 Log("Generating General List, Final TTS List, and Azure SSML...");
 
-                string voiceName = "ja-JP-NanamiNeural";
-
                 TtsPipelineResult ttsResult =
-                    TtsPipelineService.Build(inputText, reviewedItems, voiceName);
+                    TtsPipelineService.Build(inputText, reviewedItems, profile, profile.DefaultVoice);
 
                 Log("General List: " + ttsResult.GeneralList.Count);
                 Log("Final TTS List: " + ttsResult.FinalTtsList.Count);
 
-                // Open TTS Result Preview form
                 TtsResultPreview ttsForm =
-                    new TtsResultPreview(inputText, ttsResult);
+                    new TtsResultPreview(inputText, ttsResult, profile);
 
                 ttsForm.ShowDialog();
             }
@@ -343,24 +409,11 @@ namespace WindowsFormsApp1.UIDesign
 
         private void Log(string message)
         {
-            string line = "[" + DateTime.Now.ToString("HH:mm:ss") + "] " + message;
+            if (Txt_Msg == null)
+                return;
 
-            // 1. Show in the Processing Log console (unchanged behavior).
-            Txt_Msg.AppendText(line + Environment.NewLine);
-
-            // 2. Append to the log file. Logging must never break the pipeline,
-            //    so file errors are swallowed silently.
-            try
-            {
-                lock (_logLock)
-                {
-                    File.AppendAllText(GetLogFilePath(), line + Environment.NewLine, Encoding.UTF8);
-                }
-            }
-            catch
-            {
-                // Ignore file logging errors (locked file, permissions, etc.).
-            }
+            Txt_Msg.AppendText("[" + DateTime.Now.ToString("HH:mm:ss") + "] " +
+                               message + Environment.NewLine);
         }
 
         // ---------------------------------------------------------------
@@ -378,11 +431,14 @@ namespace WindowsFormsApp1.UIDesign
                 Timeout = TimeSpan.FromSeconds(120)
             };
 
+            // Cache is keyed by (path + language + file timestamp) so switching
+            // language always rebuilds the matcher with the right strategy.
             private string _cachedPath;
+            private string _cachedLangKey;
             private DateTime _cachedStamp;
             private FixedDictionaryService _cachedMatcher;
 
-            public FixedDictionaryService GetMatcher(string path)
+            public FixedDictionaryService GetMatcher(string path, ILanguageProfile profile)
             {
                 if (!File.Exists(path))
                     throw new FileNotFoundException("Fixed list file not found.", path);
@@ -391,21 +447,23 @@ namespace WindowsFormsApp1.UIDesign
 
                 if (_cachedMatcher != null &&
                     _cachedPath == path &&
+                    _cachedLangKey == profile.Key &&
                     _cachedStamp == stamp)
                 {
                     return _cachedMatcher;
                 }
 
-                List<FixedWord> words = LoadFixedList(path);
+                List<FixedWord> words = LoadFixedList(path, profile);
 
-                _cachedMatcher = new FixedDictionaryService(words);
+                _cachedMatcher = new FixedDictionaryService(words, profile);
                 _cachedPath = path;
+                _cachedLangKey = profile.Key;
                 _cachedStamp = stamp;
 
                 return _cachedMatcher;
             }
 
-            public List<FixedWord> LoadFixedList(string path)
+            public List<FixedWord> LoadFixedList(string path, ILanguageProfile profile)
             {
                 var list = new List<FixedWord>();
 
@@ -423,7 +481,7 @@ namespace WindowsFormsApp1.UIDesign
                     for (int row = 2; row <= lastRow.RowNumber(); row++)
                     {
                         string word = ws.Cell(row, 1).GetString().Trim();
-                        string hira = ws.Cell(row, 2).GetString().Trim();
+                        string reading = ws.Cell(row, 2).GetString().Trim();
                         string difficulty = ws.Cell(row, 3).GetString().Trim();
 
                         if (string.IsNullOrWhiteSpace(word))
@@ -431,8 +489,8 @@ namespace WindowsFormsApp1.UIDesign
 
                         list.Add(new FixedWord
                         {
-                            Word = JapaneseTextNormalizer.NormalizeText(word),
-                            Hiragana = JapaneseTextNormalizer.ToHiragana(hira),
+                            Word = profile.NormalizeText(word),
+                            Hiragana = profile.NormalizeReading(reading),
                             Difficulty = string.IsNullOrWhiteSpace(difficulty) ? "General" : difficulty
                         });
                     }
@@ -441,7 +499,8 @@ namespace WindowsFormsApp1.UIDesign
                 return list;
             }
 
-            public async Task<List<ApiKanjiItem>> ExtractKanjiAsync(string maskedText)
+            public async Task<List<ApiKanjiItem>> ExtractKanjiAsync(
+                string maskedText, ILanguageProfile profile)
             {
                 string apiKey =
                     Environment.GetEnvironmentVariable("OPENAI_API_KEY", EnvironmentVariableTarget.User)
@@ -451,54 +510,8 @@ namespace WindowsFormsApp1.UIDesign
                 if (string.IsNullOrWhiteSpace(apiKey))
                     throw new Exception("OPENAI_API_KEY is missing. Set it in Windows environment variables.");
 
-                string prompt =
-                                @"You are a Japanese TTS pronunciation extraction agent.
-
-                                The marker 【FIXED】 means this word is already handled by the fixed dictionary.
-                                Ignore every 【FIXED】 marker completely.
-                                Never output 【FIXED】.
-                                Never guess the hidden fixed words.
-                                Extract EVERY kanji word and important term — do not skip any, even if it
-                                seems common. It is better to over-extract than to miss one.
-
-                                From the remaining visible text, extract ONLY kanji words and important Japanese terms.
-
-                                Target terms:
-                                - place names
-                                - shrine names
-                                - temple names
-                                - museum names
-                                - person names
-                                - organization names
-                                - historical terms
-                                - cultural terms
-                                - technical terms
-                                - rare kanji words
-                                - difficult pronunciation words
-
-                                Prefer full words and phrases over single kanji characters.
-
-                                Return ONLY a JSON array.
-                                No prose.
-                                No markdown fences.
-
-                                Format:
-                                [
-                                  {
-                                    ""word"": ""笄"",
-                                    ""hiragana"": ""こうがい"",
-                                    ""difficulty"": ""high"",
-                                    ""reason"": ""Rare kanji; reading is not predictable.""
-                                  }
-                                ]
-
-                                difficulty:
-                                low = common stable word
-                                medium = compound/technical/cultural/historical word
-                                high = place/shrine/person name, rare kanji, local term, uncertain reading
-
-                                Input Text:
-                                " + maskedText;
+                // THE ONLY LANGUAGE-SPECIFIC PART OF THE API CALL:
+                string prompt = profile.BuildLlmPrompt(maskedText);
 
                 var body = new
                 {
@@ -506,7 +519,6 @@ namespace WindowsFormsApp1.UIDesign
                     input = prompt,
                     max_output_tokens = 2000,
                     temperature = 0
-                    
                 };
 
                 using (var req = new HttpRequestMessage(HttpMethod.Post, Endpoint))
@@ -531,7 +543,7 @@ namespace WindowsFormsApp1.UIDesign
                     }
 
                     string rawText = ExtractOutputText(responseText);
-                    return ParseKanjiArray(rawText);
+                    return ParseKanjiArray(rawText, profile);
                 }
             }
 
@@ -577,7 +589,8 @@ namespace WindowsFormsApp1.UIDesign
                 }
             }
 
-            private static List<ApiKanjiItem> ParseKanjiArray(string text)
+            private static List<ApiKanjiItem> ParseKanjiArray(
+                string text, ILanguageProfile profile)
             {
                 if (string.IsNullOrWhiteSpace(text))
                     return new List<ApiKanjiItem>();
@@ -606,8 +619,8 @@ namespace WindowsFormsApp1.UIDesign
                         if (item == null)
                             continue;
 
-                        item.Word = JapaneseTextNormalizer.NormalizeText(item.Word);
-                        item.Hiragana = JapaneseTextNormalizer.ToHiragana(item.Hiragana);
+                        item.Word = profile.NormalizeText(item.Word);
+                        item.Hiragana = profile.NormalizeReading(item.Hiragana);
                     }
 
                     return items
@@ -617,7 +630,7 @@ namespace WindowsFormsApp1.UIDesign
                 catch (JsonException ex)
                 {
                     throw new Exception(
-                        "ChatGPT returned invalid JSON.\n\nRaw model output:\n" +
+                        "The model returned invalid JSON.\n\nRaw model output:\n" +
                         text + "\n\nJSON error: " + ex.Message
                     );
                 }

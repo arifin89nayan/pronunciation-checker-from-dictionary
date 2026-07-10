@@ -6,21 +6,26 @@ using System.Security;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
+
 public class PhonemeLexiconHelper
 {
-    private readonly Dictionary<string, string> _lexicon = new Dictionary<string, string>();
+    private enum EntryType { Phoneme, Alias }
 
-    // Load lexicon at creation
-    public PhonemeLexiconHelper(string plsXmlPath)
+    private readonly Dictionary<string, (string Value, EntryType Type)> _lexicon;
+    private readonly bool _useWordBoundaries;
+
+    public PhonemeLexiconHelper(string plsXmlPath, bool isSpaceDelimitedLanguage = false)
     {
-        if (File.Exists(plsXmlPath))
-        {
-            LoadPlsLexicon(plsXmlPath);
-        }
-        else
-        {
+        if (!File.Exists(plsXmlPath))
             throw new FileNotFoundException($"Lexicon file not found: {plsXmlPath}");
-        }
+
+        _useWordBoundaries = isSpaceDelimitedLanguage;
+        _lexicon = new Dictionary<string, (string, EntryType)>(
+            isSpaceDelimitedLanguage
+                ? StringComparer.OrdinalIgnoreCase   // English: Tokyo == tokyo
+                : StringComparer.Ordinal);           // Japanese: exact match
+
+        LoadPlsLexicon(plsXmlPath);
     }
 
     private void LoadPlsLexicon(string xmlPath)
@@ -33,63 +38,42 @@ public class PhonemeLexiconHelper
             var phoneme = lex.Element(ns + "phoneme")?.Value?.Trim();
             var alias = lex.Element(ns + "alias")?.Value?.Trim();
 
-            if (!string.IsNullOrEmpty(grapheme))
-            {
-                if (!string.IsNullOrEmpty(phoneme))
-                    _lexicon[grapheme] = phoneme;
-                else if (!string.IsNullOrEmpty(alias))
-                    _lexicon[grapheme] = alias;
-            }
+            if (string.IsNullOrEmpty(grapheme)) continue;
+
+            if (!string.IsNullOrEmpty(phoneme))
+                _lexicon[grapheme] = (phoneme, EntryType.Phoneme);   // remember the type here
+            else if (!string.IsNullOrEmpty(alias))
+                _lexicon[grapheme] = (alias, EntryType.Alias);
         }
     }
 
-    // Replace target words with phoneme tags (regex for word boundary safety)
     public string InjectPhonemes(string input)
     {
-        //foreach (var kvp in _lexicon)
-        //{
-
-        //    input = input.Replace(kvp.Key, $"<phoneme alphabet='sapi' ph='{kvp.Value}'>{kvp.Key}</phoneme>");
-        //}
-        //return input;
         if (_lexicon.Count == 0 || string.IsNullOrEmpty(input)) return input;
 
-        // Longest first prevents 上米内 being corrupted by 米内 replacement
         var keys = _lexicon.Keys
             .OrderByDescending(k => k.Length)
-            .Select(Regex.Escape);
+            .Select(k => _useWordBoundaries
+                ? $@"\b{Regex.Escape(k)}\b"
+                : Regex.Escape(k));
 
         var pattern = string.Join("|", keys);
+        var options = _useWordBoundaries ? RegexOptions.IgnoreCase : RegexOptions.None;
 
         return Regex.Replace(input, pattern, m =>
         {
-            var value = _lexicon[m.Value]; // e.g., カミヨナイ or actual phoneme
-            var safeValue = SecurityElement.Escape(value);
+            var entry = _lexicon[m.Value];        // dictionary is OrdinalIgnoreCase, so lowercase "iwate" still finds the entry
+            var safeValue = SecurityElement.Escape(entry.Value);
 
-            // If the value is Kana, treat it as reading (alias), not a SAPI phoneme
-            if (IsKana(value))
-                return $"<sub alias=\"{safeValue}\">{m.Value}</sub>";
-
-            // Otherwise assume it's a real phoneme string (SAPI/IPA etc.)
-            return $"<phoneme alphabet='sapi' ph='{safeValue}'>{m.Value}</phoneme>";
-        });
+            return entry.Type == EntryType.Alias
+                ? $"<sub alias=\"{safeValue}\">{m.Value}</sub>"
+                : $"<phoneme alphabet='sapi' ph='{safeValue}'>{m.Value}</phoneme>";
+        }, options);   // <-- this was missing
     }
-    private static bool IsKana(string s)
+    // BuildSsml unchanged...
+    public static string BuildSsml(string textWithPhonemes, string language, string voice)
     {
-        foreach (var ch in s)
-        {
-            if ((ch >= '\u3040' && ch <= '\u309F') ||  // Hiragana
-                (ch >= '\u30A0' && ch <= '\u30FF') ||  // Katakana
-                (ch >= '\u31F0' && ch <= '\u31FF'))    // Katakana Phonetic Extensions
-                return true;
-        }
-        return false;
-    }
-
-    // Generate SSML string
-    public static string BuildSsml(string textWithPhonemes, string language , string voice )
-            {
-                return $@"
+        return $@"
         <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{language}'>
           <voice name='{voice}'>
             {textWithPhonemes}
@@ -97,3 +81,94 @@ public class PhonemeLexiconHelper
         </speak>";
     }
 }
+//public class PhonemeLexiconHelper
+//{
+//    private readonly Dictionary<string, string> _lexicon = new Dictionary<string, string>();
+
+//    // Load lexicon at creation
+//    public PhonemeLexiconHelper(string plsXmlPath)
+//    {
+//        if (File.Exists(plsXmlPath))
+//        {
+//            LoadPlsLexicon(plsXmlPath);
+//        }
+//        else
+//        {
+//            throw new FileNotFoundException($"Lexicon file not found: {plsXmlPath}");
+//        }
+//    }
+
+//    private void LoadPlsLexicon(string xmlPath)
+//    {
+//        XDocument xdoc = XDocument.Load(xmlPath);
+//        XNamespace ns = "http://www.w3.org/2005/01/pronunciation-lexicon";
+//        foreach (var lex in xdoc.Descendants(ns + "lexeme"))
+//        {
+//            var grapheme = lex.Element(ns + "grapheme")?.Value?.Trim();
+//            var phoneme = lex.Element(ns + "phoneme")?.Value?.Trim();
+//            var alias = lex.Element(ns + "alias")?.Value?.Trim();
+
+//            if (!string.IsNullOrEmpty(grapheme))
+//            {
+//                if (!string.IsNullOrEmpty(phoneme))
+//                    _lexicon[grapheme] = phoneme;
+//                else if (!string.IsNullOrEmpty(alias))
+//                    _lexicon[grapheme] = alias;
+//            }
+//        }
+//    }
+
+//    // Replace target words with phoneme tags (regex for word boundary safety)
+//    public string InjectPhonemes(string input)
+//    {
+//        //foreach (var kvp in _lexicon)
+//        //{
+
+//        //    input = input.Replace(kvp.Key, $"<phoneme alphabet='sapi' ph='{kvp.Value}'>{kvp.Key}</phoneme>");
+//        //}
+//        //return input;
+//        if (_lexicon.Count == 0 || string.IsNullOrEmpty(input)) return input;
+
+//        // Longest first prevents 上米内 being corrupted by 米内 replacement
+//        var keys = _lexicon.Keys
+//            .OrderByDescending(k => k.Length)
+//            .Select(Regex.Escape);
+
+//        var pattern = string.Join("|", keys);
+
+//        return Regex.Replace(input, pattern, m =>
+//        {
+//            var value = _lexicon[m.Value]; // e.g., カミヨナイ or actual phoneme
+//            var safeValue = SecurityElement.Escape(value);
+
+//            // If the value is Kana, treat it as reading (alias), not a SAPI phoneme
+//            if (IsKana(value))
+//                return $"<sub alias=\"{safeValue}\">{m.Value}</sub>";
+
+//            // Otherwise assume it's a real phoneme string (SAPI/IPA etc.)
+//            return $"<phoneme alphabet='sapi' ph='{safeValue}'>{m.Value}</phoneme>";
+//        });
+//    }
+//    private static bool IsKana(string s)
+//    {
+//        foreach (var ch in s)
+//        {
+//            if ((ch >= '\u3040' && ch <= '\u309F') ||  // Hiragana
+//                (ch >= '\u30A0' && ch <= '\u30FF') ||  // Katakana
+//                (ch >= '\u31F0' && ch <= '\u31FF'))    // Katakana Phonetic Extensions
+//                return true;
+//        }
+//        return false;
+//    }
+
+//    // Generate SSML string
+//    public static string BuildSsml(string textWithPhonemes, string language , string voice )
+//            {
+//                return $@"
+//        <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='{language}'>
+//          <voice name='{voice}'>
+//            {textWithPhonemes}
+//          </voice>
+//        </speak>";
+//    }
+//}

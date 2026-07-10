@@ -119,6 +119,7 @@ namespace WindowsFormsApp1.Services
             string text = fileData.GuideName;
 
             string fontName = Properties.Settings.Default.AniFontName;
+            fontName = ResolveFontForText(text, fontName);
             FontStyle fontStyle = (FontStyle)Enum.Parse(typeof(FontStyle), Properties.Settings.Default.AniFontStyle.ToString());
 
             float fontSize = Properties.Settings.Default.AniFontSize;
@@ -213,45 +214,27 @@ namespace WindowsFormsApp1.Services
             return ColorTranslator.FromHtml(fallbackHtml);
         }
 
-        private Bitmap DrawTextOnImage1(Image inputImage)
+        private static string ResolveFontForText(string text, string defaultFontName)
         {
-            Label lbl = new Label();
-            lbl.Text = fileData.GuideName;
-            lbl.Font = new System.Drawing.Font(Properties.Settings.Default.AniFontName,
-                                Properties.Settings.Default.AniFontSize,
-                                (FontStyle)Enum.Parse(typeof(FontStyle), Properties.Settings.Default.AniFontStyle.ToString()));
-            lbl.ForeColor = System.Drawing.Color.White; // Text color, adjust as needed
-            lbl.BackColor = System.Drawing.Color.FromArgb(180, 0, 0, 0); // Semi-transparent black
-            lbl.AutoSize = false;
-            lbl.TextAlign = ContentAlignment.MiddleCenter;
-            lbl.Width = inputImage.Width;
-            int minHeight = 50;
-            int neededHeight;
-            using (Graphics g = Graphics.FromImage(new Bitmap(1, 1)))
+            bool hasCjk = text.Any(c =>
+                (c >= 0x4E00 && c <= 0x9FFF) ||   // CJK Unified Ideographs (Chinese/Japanese kanji)
+                (c >= 0x3400 && c <= 0x4DBF) ||   // CJK Extension A
+                (c >= 0x3040 && c <= 0x30FF) ||   // Hiragana + Katakana
+                (c >= 0xAC00 && c <= 0xD7AF));    // Hangul
+
+            if (!hasCjk)
+                return defaultFontName;
+
+            // Try CJK fonts in order of preference (Traditional Chinese first for Taiwan)
+            string[] cjkFonts = { "Microsoft JhengHei", "Microsoft YaHei", "Yu Gothic UI", "Meiryo", "MS Gothic" };
+
+            using (var installed = new System.Drawing.Text.InstalledFontCollection())
             {
-                SizeF textSize = g.MeasureString(
-                     lbl.Text,
-                    lbl.Font,
-                    lbl.Width - 2 * 5 // ensure padding on sides
-                );
-                neededHeight = (int)Math.Ceiling(textSize.Height) ;
-                neededHeight = Math.Max(neededHeight, minHeight);
+                var names = installed.Families.Select(f => f.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var f in cjkFonts)
+                    if (names.Contains(f)) return f;
             }
-            lbl.Height = neededHeight;
-
-            // 2. Render the label to a bitmap
-            Bitmap labelBitmap = new Bitmap(lbl.Width, lbl.Height);
-            lbl.DrawToBitmap(labelBitmap, new Rectangle(0, 0, lbl.Width, lbl.Height));
-
-            // 3. Draw the original image and overlay the label bitmap
-            Bitmap result = new Bitmap(inputImage.Width, inputImage.Height);
-            using (Graphics g = Graphics.FromImage(result))
-            {
-                g.DrawImage(inputImage, 0, 0, inputImage.Width, inputImage.Height);
-                g.DrawImage(labelBitmap, 0, 0); // Draw label at the top
-            }
-
-            return result;
+            return defaultFontName;
         }
     }
 }
