@@ -8,5 +8,7 @@ namespace WindowsFormsApp1.Helper
         public string TextColor { get; set; }
         public string TextFont { get; set; }
         public string BGcolor {get;set;}
+        public string Language { get; set; }
+
     }
 }

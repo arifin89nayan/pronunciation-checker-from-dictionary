@@ -75,12 +75,27 @@ namespace WindowsFormsApp1.Helper
 
             SendMessage(rtb.Handle, EM_SETPARAFORMAT, SCF_ALL, ref fmt);
         }
-      
+        private string GetFontForLanguage(string language)
+        {
+            if (string.IsNullOrEmpty(language))
+                return Properties.Settings.Default.CapFontName;
+
+            string lang = language.Trim().ToLowerInvariant();
+
+            if (lang.Contains("zh") || lang.Contains("chin") || lang.Contains("中"))
+                return "Microsoft YaHei";          // Simplified Chinese
+            if (lang.Contains("ja") || lang.Contains("jap") || lang.Contains("日"))
+                return "Meiryo";                   // or MS Gothic
+
+            return Properties.Settings.Default.CapFontName;
+        }
+
         public string GenerateImage(TxtToImage model)
         {
             // 1) Load settings
             string text = model.InputText;
-            string fontName = Properties.Settings.Default.CapFontName; 
+            string fontName = GetFontForLanguage(model.Language);
+            //string fontName = Properties.Settings.Default.CapFontName; 
             float fontSize = Properties.Settings.Default.CapFontSize;
             Color fg = ColorTranslator.FromHtml(Properties.Settings.Default.CapFontColor);
             Color bg = ColorTranslator.FromHtml(Properties.Settings.Default.CapBgColor);
