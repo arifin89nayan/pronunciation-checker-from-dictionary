@@ -29,8 +29,7 @@ namespace WindowsFormsApp1.Helper.Quiz
             // (确, 鱼, 它们 …) — they become "?" like in your screenshot.
             // If the CorrectAnswer text is Chinese, switch to UTF-8 with BOM:
             //   var encoding = new UTF8Encoding(true);
-            //var encoding = Encoding.GetEncoding("shift_jis");
-            var encoding = Encoding.Unicode;
+            var encoding = Encoding.GetEncoding("shift_jis");
 
             var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
             {

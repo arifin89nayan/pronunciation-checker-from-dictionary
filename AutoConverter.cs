@@ -564,6 +564,7 @@ namespace WindowsFormsApp1
 
             // If ContentPathInfo.txt exists, read by line index.
             // If not exists, use default child folders.
+
             string templatePath = GetSafePathByIndex(pathsFromInfo, parentFolder, 0, "Template");
             string audioPath = GetSafePathByIndex(pathsFromInfo, parentFolder, 1, "Audio");
             string languagePath = GetSafePathByIndex(pathsFromInfo, parentFolder, 2, "Language");

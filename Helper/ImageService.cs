@@ -82,6 +82,7 @@ namespace WindowsFormsApp1.Helper
 
             string lang = language.Trim().ToLowerInvariant();
 
+
             if (lang.Contains("zh") || lang.Contains("zh-CN") || lang.Contains("中"))
                 return "Microsoft YaHei";          // Simplified Chinese
             if (lang.Contains("ja") || lang.Contains("jp-JP") || lang.Contains("日"))
@@ -90,6 +91,12 @@ namespace WindowsFormsApp1.Helper
             //    return "Microsoft YaHei";          // Simplified Chinese
             //if (lang.Contains("ja") || lang.Contains("jp-JP") || lang.Contains("日"))
             //    return "Meiryo";
+
+            if (lang.Contains("zh") || lang.Contains("chin") || lang.Contains("中"))
+                return "Microsoft YaHei";          // Simplified Chinese
+            if (lang.Contains("ja") || lang.Contains("jap") || lang.Contains("日"))
+                return "Meiryo";                   // or MS Gothic
+
 
             return Properties.Settings.Default.CapFontName;
         }
