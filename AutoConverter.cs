@@ -522,10 +522,10 @@ namespace WindowsFormsApp1
                 dlg.ShowNewFolderButton = true;
                 string startFolder = GetBestStartFolder(txt_workspace.Text);
                 dlg.SelectedPath = startFolder;
-                if (!string.IsNullOrWhiteSpace(txt_workspace.Text) && Directory.Exists(txt_workspace.Text))
-                {
-                    dlg.SelectedPath = txt_workspace.Text;
-                }
+                //if (!string.IsNullOrWhiteSpace(txt_workspace.Text) && Directory.Exists(txt_workspace.Text))
+                //{
+                //    dlg.SelectedPath = txt_workspace.Text;
+                //}
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
