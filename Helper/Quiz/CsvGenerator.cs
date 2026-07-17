@@ -30,7 +30,7 @@ namespace WindowsFormsApp1.Helper.Quiz
             // If the CorrectAnswer text is Chinese, switch to UTF-8 with BOM:
             //   var encoding = new UTF8Encoding(true);
             //var encoding = Encoding.GetEncoding("UTF-8");
-            var encoding = Encoding.GetEncoding("shift_jis");
+            //var encoding = Encoding.GetEncoding("shift_jis");
             var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = false,
@@ -45,7 +45,8 @@ namespace WindowsFormsApp1.Helper.Quiz
 
                 if (File.Exists(csvFilePath))
                 {
-                    var allLines = File.ReadAllLines(csvFilePath, encoding);
+                    //var allLines = File.ReadAllLines(csvFilePath, encoding);
+                    var allLines = File.ReadAllLines(csvFilePath);
 
                     // Preserve the existing header line (contains the ID + column names)
                     headerLine = allLines.Length > 0
@@ -101,7 +102,8 @@ namespace WindowsFormsApp1.Helper.Quiz
                 }
 
                 // Write everything back: header line first, then the 5 rows
-                using (var writer = new StreamWriter(filePath, false, encoding))
+                //using (var writer = new StreamWriter(filePath, false, encoding))
+                using (var writer = new StreamWriter(filePath, false, new UTF8Encoding(true)))
                 {
                     writer.WriteLine(headerLine);
 
