@@ -410,6 +410,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "GuideAutoConverter";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.Load += new System.EventHandler(this.AutoConverter_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

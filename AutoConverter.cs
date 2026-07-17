@@ -901,6 +901,9 @@ namespace WindowsFormsApp1
             Properties.Settings.Default.Save();
         }
 
-       
+        private void AutoConverter_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

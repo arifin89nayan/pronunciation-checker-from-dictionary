@@ -16,17 +16,7 @@ namespace WindowsFormsApp1.Services
 {
     public class QuizService
     {
-        private string GenerateTextDateContent(TextData data)
-        {
-            string content = string.Empty;
-            content =
-                $"{data.Option1}{data.Option1}{data.Option2}{data.Option2}{data.Option3}{data.Option3}{data.Option4}{data.Option4}Correct Answer:{data.CorrectAnswer}";
-
-            return content;
-
-        }
-
-        
+      
 
         public bool BuildTextData(Quiz quiz, Widget widget)
         {
@@ -45,6 +35,7 @@ namespace WindowsFormsApp1.Services
                     FileStream fs1 = new FileStream(textDatePath, FileMode.Create);
                     char[] tempchararr1 = content.ToCharArray();
                     byte[] tempbytearr1 = System.Text.UTF8Encoding.Unicode.GetBytes(tempchararr1);
+                    //byte[] tempbytearr1 = System.Text.UTF8Encoding.UTF8.GetBytes(tempchararr1);
                     fs1.Write(tempbytearr1, 0, tempbytearr1.Length);
                     fs1.Close();
 
@@ -73,6 +64,7 @@ namespace WindowsFormsApp1.Services
                     FileStream fs1 = new FileStream(textDatePath, FileMode.Create);
                     char[] tempchararr1 = content.ToCharArray();
                     byte[] tempbytearr1 = System.Text.UTF8Encoding.Unicode.GetBytes(tempchararr1);
+                    //byte[] tempbytearr1 = System.Text.UTF8Encoding.UTF8.GetBytes(tempchararr1);
                     fs1.Write(tempbytearr1, 0, tempbytearr1.Length);
                     fs1.Close();
 
