@@ -16,18 +16,7 @@ namespace WindowsFormsApp1.Services
 {
     public class QuizService
     {
-        private string GenerateTextDateContent(TextData data)
-        {
-            string content = string.Empty;
-            content =
-                $"{data.Option1}{data.Option1}{data.Option2}{data.Option2}{data.Option3}{data.Option3}{data.Option4}{data.Option4}Correct Answer:{data.CorrectAnswer}";
-
-            return content;
-
-        }
-
-        
-
+       
         public bool BuildTextData(Quiz quiz, Widget widget)
         {
           if(widget.Lines.Any(l => l.Text.Contains("Template<T>")) && widget.IsContainSelection)

@@ -36,8 +36,7 @@ namespace WindowsFormsApp1
                 foreach (string file in Directory.GetFiles(outputFolder))
                     File.Delete(file);
 
-                //foreach (string dir in Directory.GetDirectories(outputFolder))
-                //    Directory.Delete(dir, true);
+            
             }
            
             foreach (string subfolder in Directory.GetDirectories(parentFolder))
