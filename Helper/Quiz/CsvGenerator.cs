@@ -103,7 +103,8 @@ namespace WindowsFormsApp1.Helper.Quiz
 
                 // Write everything back: header line first, then the 5 rows
                 //using (var writer = new StreamWriter(filePath, false, encoding))
-                using (var writer = new StreamWriter(filePath, false, new UTF8Encoding(true)))
+                using (var writer = new StreamWriter(filePath, false))
+               // using (var writer = new StreamWriter(filePath, false, new UTF8Encoding(true)))
                 {
                     writer.WriteLine(headerLine);
 
@@ -119,18 +120,7 @@ namespace WindowsFormsApp1.Helper.Quiz
                 throw new InvalidOperationException($"Error updating CSV file: {ex.Message}", ex);
             }
         }
-        public void UpdateCSVFileRow(string filePath, Models.Quiz quiz,
-                                    int correctAnswerSelection, int rowId)
-        {
-            // Same read logic as above, then:
-            //   var rec = records.First(r => r.Id == rowId.ToString());
-            //   ApplyQuizToRecord(rec, quiz, correctAnswerSelection);
-            // …and the same write logic. Kept as a pointer so you can choose
-            // row-targeted updates instead of "rows that already have data".
-            throw new NotImplementedException(
-                "Copy the body of UpdateCSVFile and replace the idsToUpdate block " +
-                "with a direct lookup on rowId if you need row-targeted writes.");
-        }
+        
 
         private static void ApplyQuizToRecord(QuizCSVRecord rec, Models.Quiz quiz,
                                        int numberOfChoices, int correctSelection)
@@ -142,103 +132,19 @@ namespace WindowsFormsApp1.Helper.Quiz
             rec.CorrectAnswerSelection = numberOfChoices.ToString();
 
             // Columns 5/6/7 = which choice is correct (from Excel column O)
-            rec.AnsNumber2 = correctSelection == 1 ? "1" : "0";
-            rec.AnsNumber3 = correctSelection == 2 ? "1" : "0";
-            rec.AnsNumber4 = correctSelection == 3 ? "1" : "0";
+            rec.AnsNumber1 = correctSelection == 1 ? "1" : "0";
+            rec.AnsNumber2 = correctSelection == 2 ? "1" : "0";
+            rec.AnsNumber3 = correctSelection == 3 ? "1" : "0";
+            rec.AnsNumber4 = correctSelection == 4 ? "1" : "0";
         }
 
         private static string BuildHeaderLine(string id)
         {
             // Matches your screenshot layout. Rename the last three headers
             // if the real file uses different labels.
-            return $"{id},Question,CorrectAnswer,CorrectAnswerSelection,Ans Number 1,Ans Number 2,Ans Number 3";
+            return $"{id},Question,CorrectAnswer,CorrectAnswerSelection,Ans Number 1,Ans Number 2,Ans Number 3,Ans Number 4";
         }
-        public void UpdateCSVFile4(string filePath, Models.Quiz quiz, QuizParserModel sourceModel)
-        {
-            var CSVFilesPath = Path.Combine(GlobalProperties.PlayConfigFolderPath, "CONTENTINFO.CSV");
-            var FilesPath = Path.Combine(GlobalProperties.PlayConfigFolderPath, "TEXTDATA.TXT");
-            var extractedIDValue = TextExtrator.ExtractIDFromTextData(FilesPath);
-
-            if (!File.Exists(CSVFilesPath))
-            {
-                using (File.Create(CSVFilesPath)) { }
-                return;
-            }
-
-            var encoding = Encoding.GetEncoding("shift_jis");
-
-            try
-            {
-                List<QuizCSVRecord> records;
-
-                var allLines = File.ReadAllLines(CSVFilesPath, encoding);
-                string dataOnly = string.Join(Environment.NewLine, allLines.Skip(1));
-
-                using (var reader = new StringReader(dataOnly))
-                using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = false
-                }))
-                {
-                    csv.Context.RegisterClassMap<RecordMap>();
-                    records = csv.GetRecords<QuizCSVRecord>().ToList();
-                }
-
-                foreach (var recordToUpdate in records)
-                {
-                    if (!string.IsNullOrWhiteSpace(recordToUpdate.Question) &&
-                        !string.IsNullOrWhiteSpace(recordToUpdate.CorrectAnswer))
-                    {
-                        recordToUpdate.Question = quiz.Question;
-                        recordToUpdate.CorrectAnswer = quiz.CorrectAnsDetails;
-                        int selection = int.TryParse(
-                        sourceModel.QuizCorrectAnswerSelection?.Trim(),
-                        out var s) ? s : 0;
-
-                        //// New update values
-                        //recordToUpdate.SelectionNumber = GetSelectionNumber(sourceModel);
-                        //recordToUpdate.CorrectAnswerSelection = sourceModel.QuizCorrectAnswerSelection?.Trim() ?? "";
-                        recordToUpdate.Question = quiz.Question;                       // if not set already
-                        recordToUpdate.CorrectAnswer = quiz.CorrectAnsDetails;         // if not set already
-                        recordToUpdate.CorrectAnswerSelection = selection.ToString();
-                    }
-                }
-
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HasHeaderRecord = false
-                };
-
-                using (var writer = new StreamWriter(filePath, false, encoding))
-                using (var csv = new CsvWriter(writer, config))
-                {
-                    writer.WriteLine(extractedIDValue);
-                    csv.Context.RegisterClassMap<RecordMap>();
-                    csv.WriteRecords(records);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Error updating CSV file: {ex.Message}", ex);
-            }
-        }
-
-        private string GetSelectionNumber(QuizParserModel sourceModel)
-        {
-            if (!string.IsNullOrWhiteSpace(sourceModel.SelectionNumber))
-            {
-                return sourceModel.SelectionNumber.Trim();
-            }
-
-            int count = 0;
-
-            if (!string.IsNullOrWhiteSpace(sourceModel.SelectionA)) count++;
-            if (!string.IsNullOrWhiteSpace(sourceModel.SelectionB)) count++;
-            if (!string.IsNullOrWhiteSpace(sourceModel.SelectionC)) count++;
-            if (!string.IsNullOrWhiteSpace(sourceModel.SelectionD)) count++;
-
-            return count.ToString();
-        }
+       
         public void UpdateCSVFile22(string filePath, Models.Quiz quiz)
         {
             var CSVFilesPath = Path.Combine(GlobalProperties.PlayConfigFolderPath, "CONTENTINFO.CSV");
