@@ -16,7 +16,12 @@ namespace WindowsFormsApp1.Services
 {
     public class QuizService
     {
+<<<<<<< HEAD
        
+=======
+      
+
+>>>>>>> 6c75c0cb2cfdc3fb6563ad4a007b94586492fbda
         public bool BuildTextData(Quiz quiz, Widget widget)
         {
           if(widget.Lines.Any(l => l.Text.Contains("Template<T>")) && widget.IsContainSelection)
@@ -34,6 +39,7 @@ namespace WindowsFormsApp1.Services
                     FileStream fs1 = new FileStream(textDatePath, FileMode.Create);
                     char[] tempchararr1 = content.ToCharArray();
                     byte[] tempbytearr1 = System.Text.UTF8Encoding.Unicode.GetBytes(tempchararr1);
+                    //byte[] tempbytearr1 = System.Text.UTF8Encoding.UTF8.GetBytes(tempchararr1);
                     fs1.Write(tempbytearr1, 0, tempbytearr1.Length);
                     fs1.Close();
 
@@ -62,6 +68,7 @@ namespace WindowsFormsApp1.Services
                     FileStream fs1 = new FileStream(textDatePath, FileMode.Create);
                     char[] tempchararr1 = content.ToCharArray();
                     byte[] tempbytearr1 = System.Text.UTF8Encoding.Unicode.GetBytes(tempchararr1);
+                    //byte[] tempbytearr1 = System.Text.UTF8Encoding.UTF8.GetBytes(tempchararr1);
                     fs1.Write(tempbytearr1, 0, tempbytearr1.Length);
                     fs1.Close();
 

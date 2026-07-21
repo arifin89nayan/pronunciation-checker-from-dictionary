@@ -23,7 +23,8 @@ namespace WindowsFormsApp1.Services
                 }
                 
           
-                byte[] tempbytearr1 = UTF8Encoding.Unicode.GetBytes(content);
+               byte[] tempbytearr1 = UTF8Encoding.Unicode.GetBytes(content);
+                //byte[] tempbytearr1 = Encoding.UTF8.GetBytes(content);
                 File.WriteAllBytes(filePath, tempbytearr1);
                  
 

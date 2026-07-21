@@ -522,10 +522,10 @@ namespace WindowsFormsApp1
                 dlg.ShowNewFolderButton = true;
                 string startFolder = GetBestStartFolder(txt_workspace.Text);
                 dlg.SelectedPath = startFolder;
-                if (!string.IsNullOrWhiteSpace(txt_workspace.Text) && Directory.Exists(txt_workspace.Text))
-                {
-                    dlg.SelectedPath = txt_workspace.Text;
-                }
+                //if (!string.IsNullOrWhiteSpace(txt_workspace.Text) && Directory.Exists(txt_workspace.Text))
+                //{
+                //    dlg.SelectedPath = txt_workspace.Text;
+                //}
 
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
@@ -564,6 +564,7 @@ namespace WindowsFormsApp1
 
             // If ContentPathInfo.txt exists, read by line index.
             // If not exists, use default child folders.
+
             string templatePath = GetSafePathByIndex(pathsFromInfo, parentFolder, 0, "Template");
             string audioPath = GetSafePathByIndex(pathsFromInfo, parentFolder, 1, "Audio");
             string languagePath = GetSafePathByIndex(pathsFromInfo, parentFolder, 2, "Language");
@@ -900,6 +901,9 @@ namespace WindowsFormsApp1
             Properties.Settings.Default.Save();
         }
 
-       
+        private void AutoConverter_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }
