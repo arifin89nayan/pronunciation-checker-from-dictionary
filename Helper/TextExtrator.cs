@@ -65,23 +65,47 @@ namespace WindowsFormsApp1.Helper
         public static string ExtractIDFromTextData(string filePath)
         {
             if (!File.Exists(filePath))
-                throw new FileNotFoundException("TEXTDATA.TXT not found.");
+                throw new FileNotFoundException("TEXTDATA.TXT not found.", filePath);
 
-            byte[] fileBytes = File.ReadAllBytes(filePath);
-            string content = Encoding.Unicode.GetString(fileBytes).Replace("\0", "");
-
-            // Key (based on example "EDOTKBFFB261C866D00000085")
-            // If fixed pattern is known, like starting with "EDOTK", extract it
-            Match match = Regex.Match(content, @"EDOTK[A-Z0-9]{20}");
-            if (match.Success)
+            // Use StreamReader with BOM detection so we read text with the correct encoding.
+            string content;
+            using (var sr = new StreamReader(filePath, detectEncodingFromByteOrderMarks: true))
             {
-                string key = match.Value;
-                string id = key.Substring(key.Length - 8); // Get last 8 characters
-                return id;
+                content = sr.ReadToEnd();
             }
 
-            throw new InvalidOperationException("Key not found in TEXTDATA.TXT");
+            // Normalize and remove NUL padding
+            content = content.Replace("\0", "").Trim();
+
+            // Match key (case-insensitive). Adjust pattern length if needed.
+            var match = Regex.Match(content, @"EDOTK[A-Z0-9]{20}", RegexOptions.IgnoreCase);
+            if (!match.Success)
+                throw new InvalidOperationException("Key not found in TEXTDATA.TXT");
+
+            var key = match.Value.ToUpperInvariant();
+            var id = key.Substring(key.Length - 8); // last 8 characters
+            return id;
         }
+        //public static string ExtractIDFromTextData(string filePath)
+        //{
+        //    if (!File.Exists(filePath))
+        //        throw new FileNotFoundException("TEXTDATA.TXT not found.");
+
+        //    byte[] fileBytes = File.ReadAllBytes(filePath);
+        //    string content = Encoding.Unicode.GetString(fileBytes).Replace("\0", "");
+
+        //    // Key (based on example "EDOTKBFFB261C866D00000085")
+        //    // If fixed pattern is known, like starting with "EDOTK", extract it
+        //    Match match = Regex.Match(content, @"EDOTK[A-Z0-9]{20}");
+        //    if (match.Success)
+        //    {
+        //        string key = match.Value;
+        //        string id = key.Substring(key.Length - 8); // Get last 8 characters
+        //        return id;
+        //    }
+
+        //    throw new InvalidOperationException("Key not found in TEXTDATA.TXT");
+        //}
 
         public static List<(string Quiz, int Offset, int Length)> GetOffset_Lengths(string filepath)
         {

@@ -177,7 +177,7 @@ namespace WindowsFormsApp1
 
                 var csvGenerator = new CsvGenerator();
                 csvGenerator.UpdateCSVFile22(Path.Combine(GlobalProperties.OutputPath, "CONTENTINFO.CSV"), QuizProperties.Instance);
-               
+
             }
 
             var contentNameGenerator = new ContentNameGeneratorService();
