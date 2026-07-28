@@ -113,7 +113,7 @@ namespace WindowsFormsApp1
             }
 
             string infoFilePath = System.IO.Path.Combine(parentFolder, "ContentPathInfo.txt");
-            string parentFolderName = txt_workspace.Text?.Trim() ?? "";
+            //string parentFolderName = txt_workspace.Text?.Trim() ?? "";
 
             string templatePath = txt_template.Text?.Trim() ?? "";
             string audioPath = txt_audioFile.Text?.Trim() ?? "";
@@ -124,12 +124,13 @@ namespace WindowsFormsApp1
 
             string[] lines =
             {
-        "1." + templatePath,
-        "2." + audioPath,
-        "3." + languagePath,
-        "4." + contentPath,
-        "5." + outputPath,
-        "6." + ibcPath
+        "1." + parentFolder,
+        "2." + templatePath,
+        "3." + audioPath,
+        "4." + languagePath,
+        "5." + contentPath,
+        "6." + outputPath,
+        "7." + ibcPath
     };
 
             File.WriteAllLines(infoFilePath, lines, Encoding.UTF8);
@@ -143,7 +144,7 @@ namespace WindowsFormsApp1
             SaveCurrentPaths();
             SaveContentPathInfoFromTextBoxes();
             string parentFolderName = txt_workspace.Text.Trim() ?? "";
-            Properties.Settings.Default.TemplatePath = parentFolderName;
+            Properties.Settings.Default.txt_workspace = parentFolderName;
             Properties.Settings.Default.Save();
 
             string templatepath = txt_template.Text.Trim() ?? "";
@@ -898,6 +899,8 @@ namespace WindowsFormsApp1
             Properties.Settings.Default.ExcelLanguage = LanTextBx.Text?.Trim() ?? "";
             Properties.Settings.Default.OutPutPath = txt_outputLocation.Text?.Trim() ?? "";
             Properties.Settings.Default.OutPutIbcFile = txtIBCFile.Text?.Trim() ?? "";
+           
+            Properties.Settings.Default.txt_workspace = txt_workspace.Text?.Trim() ?? "";
             Properties.Settings.Default.Save();
         }
 

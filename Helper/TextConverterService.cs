@@ -35,7 +35,184 @@ namespace WindowsFormsApp1.Helper
         {
             _outputFilePath = outputFilePath;
         }
+        public static string GenerateLexiconFromExcel(string excelPath,string outputXmlPath,string language)
+        {
+            if (string.IsNullOrWhiteSpace(excelPath))
+                throw new ArgumentException("Excel path is empty.", nameof(excelPath));
 
+            if (!File.Exists(excelPath))
+                throw new FileNotFoundException(
+                    "Dictionary Excel file was not found.",
+                    excelPath);
+
+            if (string.IsNullOrWhiteSpace(outputXmlPath))
+                throw new ArgumentException(
+                    "Output XML path is empty.",
+                    nameof(outputXmlPath));
+
+            language = string.IsNullOrWhiteSpace(language)
+                ? "ja-JP"
+                : language.Trim();
+
+            bool isEnglish = language.StartsWith(
+                "en",
+                StringComparison.OrdinalIgnoreCase);
+
+            bool isJapanese = language.StartsWith(
+                "ja",
+                StringComparison.OrdinalIgnoreCase);
+
+            // Japanese uses SAPI pronunciation.
+            // English uses IPA or aliases.
+            string alphabet = isEnglish ? "ipa" : "sapi";
+
+            XNamespace ns =
+                "http://www.w3.org/2005/01/pronunciation-lexicon";
+
+            XNamespace xsi =
+                "http://www.w3.org/2001/XMLSchema-instance";
+
+            var lexicon = new XElement(
+                ns + "lexicon",
+
+                new XAttribute("version", "1.0"),
+                new XAttribute("alphabet", alphabet),
+                new XAttribute(XNamespace.Xml + "lang", language),
+                new XAttribute(
+                    XNamespace.Xmlns + "xsi",
+                    xsi.NamespaceName),
+
+                new XAttribute(
+                    xsi + "schemaLocation",
+                    "http://www.w3.org/2005/01/pronunciation-lexicon " +
+                    "http://www.w3.org/TR/2007/CR-pronunciation-lexicon-20071212/pls.xsd")
+            );
+
+            var seenGraphemes =
+                new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            using (var workbook = new XLWorkbook(excelPath))
+            {
+                var worksheet = workbook.Worksheet(1);
+                var range = worksheet.RangeUsed();
+
+                if (range == null)
+                    throw new InvalidOperationException(
+                        "The dictionary Excel file is empty.");
+
+                foreach (var row in range.RowsUsed())
+                {
+                    // Column A: word
+                    string grapheme =
+                        NormalizeKey(row.Cell(1).GetString());
+
+                    // Column B: pronunciation or alias
+                    string pronunciation =
+                        NormalizePhoneme(row.Cell(2).GetString());
+
+                    if (string.IsNullOrWhiteSpace(grapheme))
+                    {
+                        ErrorLogger.LogError(
+                            $"Row {row.RowNumber()} skipped: word is empty.");
+
+                        continue;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(pronunciation))
+                    {
+                        ErrorLogger.LogError(
+                            $"Row {row.RowNumber()} skipped: pronunciation is empty.");
+
+                        continue;
+                    }
+
+                    if (!seenGraphemes.Add(grapheme))
+                    {
+                        ErrorLogger.LogError(
+                            $"Duplicate grapheme skipped: \"{grapheme}\"");
+
+                        continue;
+                    }
+
+                    XElement lexeme;
+
+                    if (isEnglish)
+                    {
+                        // English Excel:
+                        // Column A = original word
+                        // Column B = spoken alias
+                        lexeme = new XElement(
+                            ns + "lexeme",
+
+                            new XElement(
+                                ns + "grapheme",
+                                grapheme),
+
+                            new XElement(
+                                ns + "alias",
+                                pronunciation)
+                        );
+                    }
+                    else
+                    {
+                        // Japanese and other phoneme-based dictionaries
+                        lexeme = new XElement(
+                            ns + "lexeme",
+
+                            new XElement(
+                                ns + "grapheme",
+                                grapheme),
+
+                            new XElement(
+                                ns + "phoneme",
+                                pronunciation)
+                        );
+                    }
+
+                    lexicon.Add(lexeme);
+                }
+            }
+
+            string outputDirectory =
+                Path.GetDirectoryName(outputXmlPath);
+
+            if (!string.IsNullOrWhiteSpace(outputDirectory))
+            {
+                Directory.CreateDirectory(outputDirectory);
+            }
+
+            var document = new XDocument(
+                new XDeclaration("1.0", "utf-8", "yes"),
+                lexicon);
+
+            document.Save(outputXmlPath);
+
+            return outputXmlPath;
+        }
+        private static string NormalizeKey(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return string.Empty;
+
+            value = value.Trim();
+
+            // Japanese full-width space → normal space
+            value = value.Replace("\u3000", " ");
+
+            value = System.Text.RegularExpressions.Regex.Replace(
+                value,
+                @"\s+",
+                " ");
+
+            return value;
+        }
+
+        private static string NormalizePhoneme(string value)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? string.Empty
+                : value.Trim();
+        }
 
         public async Task<bool> GenerateTextToSpeechAsync(string inputText, TextValue lanAndVoice)
         {
@@ -71,31 +248,31 @@ namespace WindowsFormsApp1.Helper
                     //return true;
 
                 }
-                //bool regenerate = false;
+                bool regenerate = false;
 
-                //if (!File.Exists(outputXmlPath))
-                //{
-                //    // No XML yet, must generate
-                //    regenerate = true;
-                //}
-                //else
-                //{
-                //    DateTime excelDate = File.GetLastWriteTimeUtc(dictPath);
-                //    DateTime xmlDate = File.GetLastWriteTimeUtc(outputXmlPath);
+                if (!File.Exists(outputXmlPath))
+                {
+                    // No XML yet, must generate
+                    regenerate = true;
+                }
+                else
+                {
+                    DateTime excelDate = File.GetLastWriteTimeUtc(dictPath);
+                    DateTime xmlDate = File.GetLastWriteTimeUtc(outputXmlPath);
 
-                //    if (excelDate > xmlDate)
-                //    {
-                //        // Excel has changed since XML was generated
-                //        regenerate = true;
-                //    }
-                //}
+                    if (excelDate > xmlDate)
+                    {
+                        // Excel has changed since XML was generated
+                        regenerate = true;
+                    }
+                }
 
-                //if (regenerate)
-                //{
-                //    // Call your XML generation code
-                //    var newxmlfile = GenerateLexiconFromExcel(dictPath, outputXmlPath);
+                if (regenerate)
+                {
+                    // Call your XML generation code
+                    var newxmlfile = GenerateLexiconFromExcel(dictPath, outputXmlPath, lanAndVoice.language);
 
-                //}
+                }
 
                 var helper = new PhonemeLexiconHelper(outputXmlPath, lanAndVoice.language);
                 // 2. Inject phoneme tags into your input text
