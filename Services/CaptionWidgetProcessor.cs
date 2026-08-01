@@ -247,15 +247,6 @@ namespace WindowsFormsApp1.Services
                 return;
             }
             
-
-            //DirectoryHelper.CopyFiles(source, destination, (fileName) =>
-            //{
-            //    if (fileName.Equals(widgetParsedModel.AudioFile, StringComparison.OrdinalIgnoreCase))
-            //    {
-            //        return true;
-            //    }
-            //    return false;
-            //});
         }
 
         private async Task GenerateAudioQuizCaption(string text, string language, string voice, string filename, string fileName)

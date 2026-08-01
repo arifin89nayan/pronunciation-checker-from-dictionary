@@ -93,6 +93,86 @@ public class PhonemeLexiconHelper
             return $"<phoneme alphabet='{_alphabet}' ph='{safeValue}'>{m.Value}</phoneme>";
         }, RegexOptions.IgnoreCase);
     }
+    public string InjectPhonemesJapanese(string input)
+    {
+        if (_lexicon == null ||
+            _lexicon.Count == 0 ||
+            string.IsNullOrWhiteSpace(input))
+        {
+            return input;
+        }
+
+        // Normalize Japanese text so visually identical characters match.
+        input = NormalizeJapaneseText(input);
+
+        // Longest word first:
+        // 上米内 must be matched before 米内.
+        var escapedKeys = _lexicon.Keys
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Select(NormalizeJapaneseText)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(key => key.Length)
+            .Select(Regex.Escape);
+
+        string pattern = string.Join("|", escapedKeys);
+
+        if (string.IsNullOrWhiteSpace(pattern))
+            return input;
+
+        return Regex.Replace(
+            input,
+            pattern,
+            match =>
+            {
+                string matchedWord =
+                    NormalizeJapaneseText(match.Value);
+
+                LexEntry entry;
+
+                if (!_lexicon.TryGetValue(matchedWord, out entry))
+                {
+                    return SecurityElement.Escape(match.Value);
+                }
+
+                string safeWord =
+                    SecurityElement.Escape(match.Value);
+
+                string safePronunciation =
+                    SecurityElement.Escape(entry.Value);
+
+                // Japanese Kana reading:
+                // 上米内 -> かみよない
+                if (entry.IsAlias || IsKana(entry.Value))
+                {
+                    return
+                        $"<sub alias=\"{safePronunciation}\">" +
+                        $"{safeWord}</sub>";
+                }
+
+                // Use this only when the dictionary value is a real
+                // SAPI or IPA phoneme string.
+                string safeAlphabet =
+                    SecurityElement.Escape(_alphabet);
+
+                return
+                    $"<phoneme alphabet=\"{safeAlphabet}\" " +
+                    $"ph=\"{safePronunciation}\">" +
+                    $"{safeWord}</phoneme>";
+            },
+            RegexOptions.CultureInvariant);
+    }
+    private static string NormalizeJapaneseText(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        return value
+            .Normalize(System.Text.NormalizationForm.FormKC)
+            .Replace("\u3000", " ")  // Full-width space
+            .Replace("\u200B", "")   // Zero-width space
+            .Replace("\uFEFF", "")   // BOM/zero-width no-break space
+            .Trim();
+    }
 
     private static bool IsKana(string s)
     {

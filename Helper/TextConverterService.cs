@@ -225,6 +225,7 @@ namespace WindowsFormsApp1.Helper
                 string folderPath = Path.GetDirectoryName(languagepath);
                 string safeLangPath = folderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
                 string dictPath = !string.IsNullOrEmpty(filename) ? Path.Combine(safeLangPath, filename) : null;
+                string textWithPhonemes;
 
 
                 string outputXmlPath = Path.ChangeExtension(dictPath, ".xml");
@@ -276,8 +277,20 @@ namespace WindowsFormsApp1.Helper
 
                 var helper = new PhonemeLexiconHelper(outputXmlPath, lanAndVoice.language);
                 // 2. Inject phoneme tags into your input text
-                string textWithPhonemes = helper.InjectPhonemes(inputText);
 
+                // Initialize textWithPhonemes to avoid CS0165
+                textWithPhonemes = null;
+
+                if (lang.StartsWith("jp-JP", StringComparison.OrdinalIgnoreCase))
+                {
+                    textWithPhonemes = helper.InjectPhonemesJapanese(inputText);
+                }
+                else if (lang.StartsWith("en", StringComparison.OrdinalIgnoreCase))
+                {
+                    textWithPhonemes = helper.InjectPhonemes(inputText);
+                }
+
+                // Ensure textWithPhonemes is assigned before use
                 if (!string.IsNullOrEmpty(filename))
                 {
                     // Use SSML with lexicon for Japanese
