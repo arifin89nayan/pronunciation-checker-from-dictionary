@@ -40,10 +40,10 @@ namespace WindowsFormsApp1.Helper
             if (string.IsNullOrWhiteSpace(excelPath))
                 throw new ArgumentException("Excel path is empty.", nameof(excelPath));
 
-            if (!File.Exists(excelPath))
-                throw new FileNotFoundException(
-                    "Dictionary Excel file was not found.",
-                    excelPath);
+            //if (!File.Exists(outputXmlPath))
+            //    throw new FileNotFoundException(
+            //        "Dictionary Excel file was not found.",
+            //        excelPath);
 
             if (string.IsNullOrWhiteSpace(outputXmlPath))
                 throw new ArgumentException(
@@ -270,6 +270,7 @@ namespace WindowsFormsApp1.Helper
 
                 if (regenerate)
                 {
+                     //string DICExcelFile = Path.ChangeExtension(filename, ".xlsx");
                     // Call your XML generation code
                     var newxmlfile = GenerateLexiconFromExcel(dictPath, outputXmlPath, lanAndVoice.language);
 
@@ -320,8 +321,8 @@ namespace WindowsFormsApp1.Helper
         {
             var matchLanguage = languageVoiceMap
                .FirstOrDefault(x =>
-                   string.Equals(x.LanguageName?.Trim(), quizModel.language?.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(x.Language?.Trim(), quizModel.language?.Trim(), StringComparison.OrdinalIgnoreCase)
+                   string.Equals(x.LanguageName?.Trim(), quizModel.Language?.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(x.Language?.Trim(), quizModel.Language?.Trim(), StringComparison.OrdinalIgnoreCase)
                );
             if (matchLanguage != null)
             {
