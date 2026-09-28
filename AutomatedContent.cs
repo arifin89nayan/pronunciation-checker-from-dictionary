@@ -332,7 +332,66 @@ namespace WindowsFormsApp1
                     BuildBatchItems(
                         records,
                         languages);
+                string databasePath =
+                        Path.Combine(
+                            _workspace.RootPath,
+                            "Database",
+                            "ContentGeneration.db");
 
+
+                ContentRepository repository =
+                    new ContentRepository(
+                        databasePath);
+
+
+                repository.Initialize();
+
+
+                // Save/import all Excel records into database
+                foreach (ContentItem item in batchItems)
+                {
+                    item.DatabaseItemId =
+                        repository.UpsertContentItem(
+                            item);
+
+
+                    GeneratedContentVersion latest =
+                        repository.GetLatestVersion(
+                            item.DatabaseItemId);
+
+
+                    if (latest != null)
+                    {
+                        item.CurrentVersionId =
+                            latest.Id;
+
+                        item.GeneratedText =
+                            latest.GeneratedText;
+
+                        item.AiStatus =
+                            "Generated";
+
+                        if (latest.IsApproved)
+                        {
+                            item.ValidationStatus =
+                                "Passed";
+
+                            item.ReviewStatus =
+                                "Approved";
+
+                            item.ProcessStatus =
+                                "Ready";
+                        }
+                        else
+                        {
+                            item.ReviewStatus =
+                                "Review";
+
+                            item.ProcessStatus =
+                                "Waiting";
+                        }
+                    }
+                }
                 AppendSuccess(
                     $"Batch rows created: {batchItems.Count}");
 
@@ -350,6 +409,7 @@ namespace WindowsFormsApp1
                            batchItems,
                            records,
                            languages,
+                           repository,
                            _workspace.RootPath,
                            _workspace.TemplateFolder,
                            _workspace.AudioFolder,
@@ -401,6 +461,7 @@ namespace WindowsFormsApp1
                 // QUIZ
                 // ====================================================
 
+
                 if (record is QuizParserModel quiz)
                 {
                     TextValue voiceInfo =
@@ -414,14 +475,17 @@ namespace WindowsFormsApp1
                         {
                             RowNumber = rowNumber++,
 
+                            SourceId =
+                                quiz.QuizID,
+
                             Topic =
                                 quiz.QuizFolderName,
 
                             Language =
-                                !string.IsNullOrWhiteSpace(
-                                    quiz.Language)
-                                ? quiz.Language
-                                : quiz.language,
+                                quiz.Language,
+
+                            LanguageCode =
+                                voiceInfo?.language ?? "",
 
                             Voice =
                                 voiceInfo?.voice ?? "",
@@ -469,11 +533,17 @@ namespace WindowsFormsApp1
                         {
                             RowNumber = rowNumber++,
 
+                            SourceId =
+                                guide.GuideId,
+
                             Topic =
                                 guide.GuideName,
 
                             Language =
                                 guide.language,
+
+                            LanguageCode =
+                                voiceInfo?.language ?? "",
 
                             Voice =
                                 voiceInfo?.voice ?? "",

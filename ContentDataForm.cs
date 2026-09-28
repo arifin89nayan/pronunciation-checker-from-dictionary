@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 using WindowsFormsApp1.Models;
 using WindowsFormsApp1.Models.AutoConverters;
+using WindowsFormsApp1.Services;
 
 namespace WindowsFormsApp1
 {
@@ -27,11 +28,12 @@ namespace WindowsFormsApp1
         private readonly string _ibcFolder;
 
         private DataGridView dataGridViewContent;
-
+        private readonly ContentRepository _repository;
+        private readonly OpenAiGuideService _aiService;
         public ContentDataForm(
             List<ContentItem> items,
             List<WidgetParsedCommonModel> originalRecords,
-            List<LanguageParsedModel> languages,
+            List<LanguageParsedModel> languages, ContentRepository repository,
             string workspace,
             string templateFolder,
             string audioFolder,
@@ -55,6 +57,10 @@ namespace WindowsFormsApp1
 
             _languages =
                 languages;
+            _repository =
+             repository;
+            _aiService =
+                new OpenAiGuideService();
 
             _workspace =
                 workspace;
@@ -73,6 +79,7 @@ namespace WindowsFormsApp1
 
 
             ConfigureGrid();
+          
 
             LoadBatchData();
         }
@@ -267,6 +274,89 @@ namespace WindowsFormsApp1
         private void ContentDataForm_Load(object sender, EventArgs e)
         {
             // You can add initialization code here if needed.
+        }
+
+        private void dataGridViewContent_CellDoubleClick(
+    object sender,
+    DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                btnAiContent.PerformClick();
+            }
+        }
+        private void btnAiContent_Click( object sender,EventArgs e)
+        {
+            var guides =
+                _batchItems
+                    .Where(x =>
+                        x.ContentType == "Guide")
+                    .ToList();
+
+
+            if (guides.Count == 0)
+            {
+                MessageBox.Show(
+                    "No Guide content found.");
+
+                return;
+            }
+
+
+            int startIndex = 0;
+
+
+            if (dataGridViewContent.CurrentRow != null)
+            {
+                ContentItem selected =
+                    dataGridViewContent.CurrentRow
+                        .DataBoundItem
+                        as ContentItem;
+
+
+                if (selected != null &&
+                    selected.ContentType == "Guide")
+                {
+                    int foundIndex =
+                        guides.IndexOf(
+                            selected);
+
+                    if (foundIndex >= 0)
+                        startIndex = foundIndex;
+                }
+            }
+
+
+            AiPreference preference =
+                new AiPreference
+                {
+                    AgeGroup =
+                        "General Visitor",
+
+                    KnowledgeLevel =
+                        "Beginner",
+
+                    Tone =
+                        "Clear and educational",
+
+                    MaximumWords =
+                        120
+                };
+
+
+            using (AiContentReviewForm form =
+                   new AiContentReviewForm(
+                       guides,
+                       startIndex,
+                       _repository,
+                       _aiService,
+                       preference))
+            {
+                form.ShowDialog();
+            }
+
+
+            dataGridViewContent.Refresh();
         }
     }
 }

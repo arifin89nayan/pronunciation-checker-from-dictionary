@@ -9,11 +9,19 @@ namespace WindowsFormsApp1.Models
 {
     public class ContentItem
     {
+        
         public int RowNumber { get; set; }
+
+        // GuideId or QuizID
+        public string SourceId { get; set; }
 
         public string Topic { get; set; }
 
+        // Example: JP_MALE / Eng_US
         public string Language { get; set; }
+
+        // Example: ja-JP / en-US
+        public string LanguageCode { get; set; }
 
         public string Voice { get; set; }
 
@@ -21,10 +29,10 @@ namespace WindowsFormsApp1.Models
 
         public string ContentType { get; set; }
 
-        // Original Excel content that AI will use later
+        // Original Excel source text
         public string SourceText { get; set; }
 
-        // Future AI result
+        // Current AI/generated/edited text
         public string GeneratedText { get; set; }
 
         public string AiStatus { get; set; }
@@ -35,8 +43,12 @@ namespace WindowsFormsApp1.Models
 
         public string ProcessStatus { get; set; }
 
-        // Keep original parsed model.
-        // Later we can write generated AI data back into it.
+        // SQLite IDs
+        public long DatabaseItemId { get; set; }
+
+        public long? CurrentVersionId { get; set; }
+
+        // Keep original parsed Excel record
         public WidgetParsedCommonModel OriginalRecord { get; set; }
     }
 }
