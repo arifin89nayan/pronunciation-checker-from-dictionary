@@ -10,29 +10,136 @@ namespace WindowsFormsApp1
 {
     public partial class AiContentReviewForm : Form
     {
+        // ============================================================
+        // CONTENT CURRENTLY BEING REVIEWED
+        //
+        // IMPORTANT:
+        // ContentDataForm passes either:
+        //
+        // List<ContentItem> Guide only
+        //
+        // OR
+        //
+        // List<ContentItem> Quiz only
+        //
+        // ============================================================
+
         private readonly List<ContentItem> _items;
+
+
+        // ============================================================
+        // DATABASE
+        // ============================================================
 
         private readonly ContentRepository _repository;
 
+
+        // ============================================================
+        // AI
+        //
+        // Currently using your existing service for both types.
+        //
+        // Later OpenAiGuideService can internally switch its
+        // prompt/schema based on item.ContentType.
+        // ============================================================
+
         private readonly OpenAiGuideService _aiService;
 
-        private readonly GuideValidationService _validator;
+
+        // ============================================================
+        // VALIDATION
+        // ============================================================
+
+        private readonly GuideValidationService _guideValidator;
+
+
+        // ============================================================
+        // PREFERENCE
+        // ============================================================
 
         private readonly AiPreference _preference;
 
+
+        // ============================================================
+        // CURRENT POSITION
+        // ============================================================
+
         private int _currentIndex;
+
+
+        // ============================================================
+        // EDIT STATE
+        // ============================================================
 
         private bool _editing = false;
 
+
+        // ============================================================
+        // CURRENT ITEM
+        // ============================================================
 
         private ContentItem CurrentItem
         {
             get
             {
+                if (_items == null ||
+                    _items.Count == 0)
+                {
+                    return null;
+                }
+
+
                 return _items[_currentIndex];
             }
         }
 
+
+        // ============================================================
+        // CURRENT CONTENT TYPE
+        // ============================================================
+
+        private bool IsGuide
+        {
+            get
+            {
+                return CurrentItem != null &&
+                       string.Equals(
+                           CurrentItem.ContentType,
+                           "Guide",
+                           StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+
+        private bool IsQuiz
+        {
+            get
+            {
+                return CurrentItem != null &&
+                       string.Equals(
+                           CurrentItem.ContentType,
+                           "Quiz",
+                           StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+
+        private string CurrentContentType
+        {
+            get
+            {
+                if (IsQuiz)
+                    return "Quiz";
+
+
+                return "Guide";
+            }
+        }
+
+
+        // ============================================================
+        // CONSTRUCTOR
+        // ============================================================
 
         public AiContentReviewForm(
             List<ContentItem> items,
@@ -43,36 +150,60 @@ namespace WindowsFormsApp1
         {
             InitializeComponent();
 
+
             _items =
-                items ?? new List<ContentItem>();
+                items ??
+                new List<ContentItem>();
+
 
             _repository =
                 repository;
 
+
             _aiService =
                 aiService;
+
 
             _preference =
                 preference;
 
-            _validator =
+
+            _guideValidator =
                 new GuideValidationService();
 
 
+            // --------------------------------------------------------
+            // START INDEX VALIDATION
+            // --------------------------------------------------------
+
             if (startIndex < 0)
+            {
                 startIndex = 0;
+            }
+
 
             if (startIndex >= _items.Count)
+            {
                 startIndex = 0;
+            }
+
 
             _currentIndex =
                 startIndex;
+
+
+            this.Shown -=
+                AiContentReviewForm_Shown;
 
 
             this.Shown +=
                 AiContentReviewForm_Shown;
         }
 
+
+        // ============================================================
+        // FORM SHOWN
+        // ============================================================
 
         private async void AiContentReviewForm_Shown(
             object sender,
@@ -83,15 +214,20 @@ namespace WindowsFormsApp1
 
 
         // ============================================================
-        // LOAD GUIDE
+        // LOAD CURRENT ITEM
         // ============================================================
 
         private async Task LoadCurrentItemAsync()
         {
-            if (_items.Count == 0)
+            if (_items == null ||
+                _items.Count == 0)
             {
                 MessageBox.Show(
-                    "No Guide content found.");
+                    "No content was found.",
+                    "AI Content Review",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
 
                 Close();
 
@@ -103,24 +239,85 @@ namespace WindowsFormsApp1
                 CurrentItem;
 
 
+            if (item == null)
+            {
+                Close();
+
+                return;
+            }
+
+
+            // ========================================================
+            // TOP COUNTER
+            // ========================================================
+
             lblContentCounter.Text =
-                $"Content: Guide " +
+                $"Content: {item.ContentType} " +
                 $"{_currentIndex + 1} / " +
                 $"{_items.Count}";
 
 
-            lblTopic.Text =
-                item.Topic;
+            // ========================================================
+            // TOPIC
+            // ========================================================
 
+            lblTopic.Text =
+                item.Topic ?? "";
+
+
+            // ========================================================
+            // DYNAMIC LABELS
+            // ========================================================
+
+            if (IsGuide)
+            {
+                lblSourceTitle.Text =
+                    "Source Text";
+
+
+                lblGeneratedTitle.Text =
+                    "Generated Guide";
+            }
+
+            else if (IsQuiz)
+            {
+                lblSourceTitle.Text =
+                    "Source Quiz";
+
+
+                lblGeneratedTitle.Text =
+                    "Generated Quiz";
+            }
+
+            else
+            {
+                lblSourceTitle.Text =
+                    "Source Content";
+
+
+                lblGeneratedTitle.Text =
+                    "Generated Content";
+            }
+
+
+            // ========================================================
+            // ORIGINAL EXCEL CONTENT
+            // ========================================================
 
             txtSourceText.Text =
                 item.SourceText ?? "";
 
 
-            // Load latest DB version if necessary
+            // ========================================================
+            // LOAD LATEST DATABASE VERSION
+            // ========================================================
+
             if (string.IsNullOrWhiteSpace(
-                    item.GeneratedText) &&
-                item.DatabaseItemId > 0)
+                    item.GeneratedText)
+                &&
+                item.DatabaseItemId > 0
+                &&
+                _repository != null)
             {
                 GeneratedContentVersion latest =
                     _repository.GetLatestVersion(
@@ -132,8 +329,10 @@ namespace WindowsFormsApp1
                     item.GeneratedText =
                         latest.GeneratedText;
 
+
                     item.CurrentVersionId =
                         latest.Id;
+
 
                     item.AiStatus =
                         "Generated";
@@ -144,8 +343,10 @@ namespace WindowsFormsApp1
                         item.ValidationStatus =
                             "Passed";
 
+
                         item.ReviewStatus =
                             "Approved";
+
 
                         item.ProcessStatus =
                             "Ready";
@@ -154,6 +355,10 @@ namespace WindowsFormsApp1
             }
 
 
+            // ========================================================
+            // CURRENT GENERATED CONTENT
+            // ========================================================
+
             txtGeneratedText.Text =
                 item.GeneratedText ?? "";
 
@@ -161,9 +366,14 @@ namespace WindowsFormsApp1
             txtGeneratedText.ReadOnly =
                 true;
 
+
             txtGeneratedText.BackColor =
                 Color.White;
 
+
+            // ========================================================
+            // RESET EDIT MODE
+            // ========================================================
 
             _editing =
                 false;
@@ -173,7 +383,12 @@ namespace WindowsFormsApp1
                 "Edit";
 
 
+            // ========================================================
+            // REFRESH UI
+            // ========================================================
+
             UpdateButtons();
+
             UpdateStatus();
 
 
@@ -189,25 +404,50 @@ namespace WindowsFormsApp1
             object sender,
             EventArgs e)
         {
+            if (CurrentItem == null)
+            {
+                return;
+            }
+
+
             try
             {
                 SetBusy(true);
 
 
-               ContentItem item =
+                ContentItem item =
                     CurrentItem;
 
 
                 lblStatus.Text =
-                    "Generating content with AI...";
+                    $"Generating {CurrentContentType} content with AI...";
 
 
                 item.AiStatus =
                     "Generating";
 
+
                 item.ProcessStatus =
                     "Processing";
 
+
+                // ====================================================
+                // CALL AI
+                //
+                // IMPORTANT:
+                //
+                // Same service currently receives Guide or Quiz.
+                //
+                // OpenAiGuideService should later inspect:
+                //
+                // item.ContentType
+                //
+                // to use:
+                //
+                // GUIDE_V1 prompt
+                // or
+                // QUIZ_V1 prompt
+                // ====================================================
 
                 AiGuideResult result =
                     await _aiService.GenerateAsync(
@@ -220,11 +460,14 @@ namespace WindowsFormsApp1
                         result.GeneratedText))
                 {
                     throw new Exception(
-                        "AI returned empty content.");
+                        $"AI returned empty {CurrentContentType} content.");
                 }
 
 
-                // Save as new version
+                // ====================================================
+                // SAVE NEW DATABASE VERSION
+                // ====================================================
+
                 long versionId =
                     _repository.CreateVersion(
                         item.DatabaseItemId,
@@ -237,52 +480,94 @@ namespace WindowsFormsApp1
                 item.CurrentVersionId =
                     versionId;
 
+
                 item.GeneratedText =
                     result.GeneratedText;
+
 
                 item.AiStatus =
                     "Generated";
 
 
-                // Validate
-                GuideValidationResult validation =
-                    _validator.Validate(
+                // ====================================================
+                // VALIDATION
+                // ====================================================
+
+                if (IsGuide)
+                {
+                    ValidateGuide(
                         item,
                         result.GeneratedText);
+                }
+
+                else if (IsQuiz)
+                {
+                    ValidateQuiz(
+                        item,
+                        result.GeneratedText);
+                }
+
+                else
+                {
+                    item.ValidationStatus =
+                        "Review";
 
 
-                item.ValidationStatus =
-                    validation.Status;
+                    item.ProcessStatus =
+                        "Attention";
 
+
+                    lblStatus.Text =
+                        "Unknown content type. Manual review is required.";
+                }
+
+
+                // Every newly generated version requires review.
                 item.ReviewStatus =
                     "Review";
 
-                item.ProcessStatus =
-                    validation.Passed
-                    ? "Waiting"
-                    : "Attention";
 
+                // ====================================================
+                // SHOW RESULT
+                // ====================================================
 
                 txtGeneratedText.Text =
                     result.GeneratedText;
 
 
-                lblStatus.Text =
-                    validation.Message;
+                txtGeneratedText.ReadOnly =
+                    true;
+
+
+                txtGeneratedText.BackColor =
+                    Color.White;
+
+
+                _editing =
+                    false;
+
+
+                btnEdit.Text =
+                    "Edit";
 
 
                 UpdateButtons();
             }
             catch (Exception ex)
             {
-                CurrentItem.AiStatus =
-                    "Failed";
+                if (CurrentItem != null)
+                {
+                    CurrentItem.AiStatus =
+                        "Failed";
 
-                CurrentItem.ValidationStatus =
-                    "Failed";
 
-                CurrentItem.ProcessStatus =
-                    "Error";
+                    CurrentItem.ValidationStatus =
+                        "Failed";
+
+
+                    CurrentItem.ProcessStatus =
+                        "Error";
+                }
 
 
                 lblStatus.Text =
@@ -298,25 +583,137 @@ namespace WindowsFormsApp1
             finally
             {
                 SetBusy(false);
+
+                UpdateButtons();
             }
         }
 
 
         // ============================================================
-        // EDIT
+        // GUIDE VALIDATION
+        // ============================================================
+
+        private void ValidateGuide(
+            ContentItem item,
+            string generatedText)
+        {
+            GuideValidationResult validation =
+                _guideValidator.Validate(
+                    item,
+                    generatedText);
+
+
+            item.ValidationStatus =
+                validation.Status;
+
+
+            item.ProcessStatus =
+                validation.Passed
+                    ? "Waiting"
+                    : "Attention";
+
+
+            lblStatus.Text =
+                validation.Message;
+        }
+
+
+        // ============================================================
+        // QUIZ VALIDATION
+        //
+        // This is intentionally basic for now.
+        //
+        // Later validate structured Quiz fields:
+        // Question
+        // Answer
+        // Options
+        // Correct selection
+        // Explanation
+        // ============================================================
+
+        private void ValidateQuiz(
+            ContentItem item,
+            string generatedText)
+        {
+            if (string.IsNullOrWhiteSpace(
+                    generatedText))
+            {
+                item.ValidationStatus =
+                    "Failed";
+
+
+                item.ProcessStatus =
+                    "Attention";
+
+
+                lblStatus.Text =
+                    "Generated Quiz content is empty.";
+
+
+                return;
+            }
+
+
+            if (generatedText.Trim().Length < 20)
+            {
+                item.ValidationStatus =
+                    "Review";
+
+
+                item.ProcessStatus =
+                    "Attention";
+
+
+                lblStatus.Text =
+                    "Generated Quiz content may be too short.";
+
+
+                return;
+            }
+
+
+            item.ValidationStatus =
+                "Passed";
+
+
+            item.ProcessStatus =
+                "Waiting";
+
+
+            lblStatus.Text =
+                "Quiz generation completed. Review before approval.";
+        }
+
+
+        // ============================================================
+        // EDIT BUTTON
         // ============================================================
 
         private void btnEdit_Click(
             object sender,
             EventArgs e)
         {
+            if (CurrentItem == null)
+            {
+                return;
+            }
+
+
+            // --------------------------------------------------------
+            // ENTER EDIT MODE
+            // --------------------------------------------------------
+
             if (!_editing)
             {
                 if (string.IsNullOrWhiteSpace(
                         txtGeneratedText.Text))
                 {
                     MessageBox.Show(
-                        "Generate content first.");
+                        $"Generate {CurrentContentType} content first.",
+                        "Edit",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+
 
                     return;
                 }
@@ -347,32 +744,56 @@ namespace WindowsFormsApp1
                 lblStatus.Text =
                     "Edit mode: modify the generated text, then click Save Edit.";
 
+
                 return;
             }
 
+
+            // --------------------------------------------------------
+            // SAVE EDIT
+            // --------------------------------------------------------
 
             SaveEditedText();
         }
 
 
-        private void SaveEditedText()
+        // ============================================================
+        // SAVE EDITED TEXT
+        // ============================================================
+
+        private bool SaveEditedText()
         {
+            if (CurrentItem == null)
+            {
+                return false;
+            }
+
+
             string text =
                 txtGeneratedText.Text.Trim();
 
 
-            if (string.IsNullOrWhiteSpace(text))
+            if (string.IsNullOrWhiteSpace(
+                    text))
             {
                 MessageBox.Show(
-                    "Generated text cannot be empty.");
+                    "Generated text cannot be empty.",
+                    "Save Edit",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
 
-                return;
+
+                return false;
             }
 
 
             ContentItem item =
                 CurrentItem;
 
+
+            // ========================================================
+            // SAVE NEW HUMAN EDIT VERSION
+            // ========================================================
 
             long versionId =
                 _repository.CreateVersion(
@@ -386,21 +807,30 @@ namespace WindowsFormsApp1
             item.CurrentVersionId =
                 versionId;
 
+
             item.GeneratedText =
                 text;
+
 
             item.AiStatus =
                 "Edited";
 
+
             item.ValidationStatus =
                 "Not Checked";
+
 
             item.ReviewStatus =
                 "Review";
 
+
             item.ProcessStatus =
                 "Waiting";
 
+
+            // ========================================================
+            // EXIT EDIT MODE
+            // ========================================================
 
             _editing =
                 false;
@@ -408,6 +838,7 @@ namespace WindowsFormsApp1
 
             txtGeneratedText.ReadOnly =
                 true;
+
 
             txtGeneratedText.BackColor =
                 Color.White;
@@ -422,6 +853,9 @@ namespace WindowsFormsApp1
 
 
             UpdateButtons();
+
+
+            return true;
         }
 
 
@@ -433,6 +867,12 @@ namespace WindowsFormsApp1
             object sender,
             EventArgs e)
         {
+            if (CurrentItem == null)
+            {
+                return;
+            }
+
+
             ContentItem item =
                 CurrentItem;
 
@@ -441,53 +881,98 @@ namespace WindowsFormsApp1
                     txtGeneratedText.Text))
             {
                 MessageBox.Show(
-                    "No generated text is available.");
+                    "No generated content is available.",
+                    "Approve",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
 
                 return;
             }
 
 
-            // If edited without pressing Save Edit,
-            // save automatically before approval.
+            // ========================================================
+            // SAVE UNSAVED EDIT FIRST
+            // ========================================================
+
             if (_editing)
             {
-                SaveEditedText();
+                bool saved =
+                    SaveEditedText();
+
+
+                if (!saved)
+                {
+                    return;
+                }
             }
 
 
             if (!item.CurrentVersionId.HasValue)
             {
                 MessageBox.Show(
-                    "No generated database version exists.");
+                    "No generated database version exists.",
+                    "Approve",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
 
                 return;
             }
 
+
+            // ========================================================
+            // APPROVE DATABASE VERSION
+            // ========================================================
 
             _repository.ApproveVersion(
                 item.DatabaseItemId,
                 item.CurrentVersionId.Value);
 
 
+            // ========================================================
+            // UPDATE UI STATUS
+            // ========================================================
+
             item.AiStatus =
-                "Generated";
+                item.AiStatus == "Edited"
+                    ? "Edited"
+                    : "Generated";
+
 
             item.ValidationStatus =
                 "Passed";
 
+
             item.ReviewStatus =
                 "Approved";
+
 
             item.ProcessStatus =
                 "Ready";
 
 
             lblStatus.Text =
-                "✓ Approved and saved to database.";
+                $"✓ {CurrentContentType} approved and saved to database.";
 
 
-            btnApprove.Enabled =
+            txtGeneratedText.ReadOnly =
+                true;
+
+
+            txtGeneratedText.BackColor =
+                Color.White;
+
+
+            _editing =
                 false;
+
+
+            btnEdit.Text =
+                "Edit";
+
+
+            UpdateButtons();
         }
 
 
@@ -499,11 +984,22 @@ namespace WindowsFormsApp1
             object sender,
             EventArgs e)
         {
+            if (CurrentItem == null)
+            {
+                return;
+            }
+
+
+            // ========================================================
+            // UNSAVED EDIT WARNING
+            // ========================================================
+
             if (_editing)
             {
                 DialogResult result =
                     MessageBox.Show(
-                        "You have unsaved changes. Continue without saving?",
+                        "You have unsaved changes.\r\n\r\n" +
+                        "Continue without saving?",
                         "Unsaved Edit",
                         MessageBoxButtons.YesNo,
                         MessageBoxIcon.Warning);
@@ -517,18 +1013,27 @@ namespace WindowsFormsApp1
             }
 
 
+            // ========================================================
+            // LAST CONTENT
+            // ========================================================
+
             if (_currentIndex >=
                 _items.Count - 1)
             {
                 MessageBox.Show(
-                    "All Guide contents have been reviewed.",
-                    "Complete",
+                    $"All {CurrentContentType} contents have been reviewed.",
+                    "Review Complete",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
+
 
                 return;
             }
 
+
+            // ========================================================
+            // NEXT ITEM
+            // ========================================================
 
             _currentIndex++;
 
@@ -538,25 +1043,59 @@ namespace WindowsFormsApp1
 
 
         // ============================================================
-        // STATUS
+        // UPDATE BUTTONS
         // ============================================================
 
         private void UpdateButtons()
         {
+            if (CurrentItem == null)
+            {
+                btnRegenerate.Enabled =
+                    false;
+
+
+                btnEdit.Enabled =
+                    false;
+
+
+                btnApprove.Enabled =
+                    false;
+
+
+                btnNext.Enabled =
+                    false;
+
+
+                return;
+            }
+
+
             bool generated =
                 !string.IsNullOrWhiteSpace(
                     txtGeneratedText.Text);
 
 
+            // --------------------------------------------------------
+            // GENERATE / REGENERATE
+            // --------------------------------------------------------
+
             btnRegenerate.Text =
                 generated
-                ? "Regenerate"
-                : "Generate";
+                    ? "Regenerate"
+                    : "Generate";
 
+
+            // --------------------------------------------------------
+            // EDIT
+            // --------------------------------------------------------
 
             btnEdit.Enabled =
                 generated;
 
+
+            // --------------------------------------------------------
+            // APPROVE
+            // --------------------------------------------------------
 
             btnApprove.Enabled =
                 generated &&
@@ -564,10 +1103,31 @@ namespace WindowsFormsApp1
                 "Approved";
 
 
+            if (CurrentItem.ReviewStatus ==
+                "Approved")
+            {
+                btnApprove.Text =
+                    "Approved";
+            }
+            else
+            {
+                btnApprove.Text =
+                    "Approve";
+            }
+
+
+            // --------------------------------------------------------
+            // NEXT
+            // --------------------------------------------------------
+
             btnNext.Enabled =
                 _items.Count > 1;
         }
 
+
+        // ============================================================
+        // UPDATE STATUS
+        // ============================================================
 
         private void UpdateStatus()
         {
@@ -575,24 +1135,35 @@ namespace WindowsFormsApp1
                 CurrentItem;
 
 
+            if (item == null)
+            {
+                lblStatus.Text =
+                    "";
+
+                return;
+            }
+
+
             if (item.ReviewStatus ==
                 "Approved")
             {
                 lblStatus.Text =
-                    "✓ Approved";
+                    $"✓ {item.ContentType} approved.";
             }
+
 
             else if (!string.IsNullOrWhiteSpace(
                          item.GeneratedText))
             {
                 lblStatus.Text =
-                    "Generated content is ready for review.";
+                    $"{item.ContentType} content is ready for review.";
             }
+
 
             else
             {
                 lblStatus.Text =
-                    "No AI content generated yet.";
+                    $"No AI {item.ContentType} content generated yet.";
             }
         }
 
@@ -601,12 +1172,13 @@ namespace WindowsFormsApp1
         // BUSY STATE
         // ============================================================
 
-        private void SetBusy(bool busy)
+        private void SetBusy(
+            bool busy)
         {
             Cursor =
                 busy
-                ? Cursors.WaitCursor
-                : Cursors.Default;
+                    ? Cursors.WaitCursor
+                    : Cursors.Default;
 
 
             btnRegenerate.Enabled =
@@ -626,9 +1198,65 @@ namespace WindowsFormsApp1
 
 
             btnNext.Enabled =
-                !busy;
+                !busy &&
+                _items.Count > 1;
         }
 
-        
+        private async void btnPrevious_Click(object sender, EventArgs e)
+        {
+            if (CurrentItem == null)
+            {
+                return;
+            }
+
+            // If user is editing, warn before moving back
+            if (_editing)
+            {
+                DialogResult result =
+                    MessageBox.Show(
+                        "You have unsaved changes.\r\n\r\n" +
+                        "Go back without saving?",
+                        "Unsaved Edit",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+
+                if (result != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                // Exit edit mode
+                _editing = false;
+
+                txtGeneratedText.ReadOnly = true;
+                txtGeneratedText.BackColor = Color.White;
+                btnEdit.Text = "Edit";
+            }
+
+            // Already at first item
+            if (_currentIndex <= 0)
+            {
+                MessageBox.Show(
+                    $"You are already at the first {CurrentContentType}.",
+                    "First Content",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
+                return;
+            }
+
+            // Move to previous item
+            _currentIndex--;
+
+            await LoadCurrentItemAsync();
+        }
+
+        private void ExitBnt_Click(object sender, EventArgs e)
+        {
+
+
+            this.Close();
+
+        }
     }
 }

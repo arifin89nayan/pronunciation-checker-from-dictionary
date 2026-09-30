@@ -382,7 +382,10 @@
     <Compile Include="LanguageProfiles\ILanguageProfile.cs" />
     <Compile Include="LanguageProfiles\JapaneseProfile.cs" />
     <Compile Include="LanguageProfiles\LanguageRegistry.cs" />
+    <Compile Include="Models\AiGeneratedDraft.cs" />
+    <Compile Include="Models\AiGenerationContext.cs" />
     <Compile Include="Models\AiPreference.cs" />
+    <Compile Include="Models\AiSettings.cs" />
     <Compile Include="Models\Animation\AnimationLineExtract.cs" />
     <Compile Include="Models\AudioQualityFinalResult.cs" />
     <Compile Include="Models\AutoConverters\LanguageParsedModel.cs" />
@@ -393,7 +396,11 @@
     <Compile Include="Models\DictionaryProcessResult.cs" />
     <Compile Include="Models\DictionaryRowModel.cs" />
     <Compile Include="Models\DuplicateGroupModel.cs" />
+    <Compile Include="Models\GeneratedContentResult.cs" />
+    <Compile Include="Models\GuideAiOutput.cs" />
     <Compile Include="Models\ParseSelectionMetadata.cs" />
+    <Compile Include="Models\PromptPackage.cs" />
+    <Compile Include="Models\QuizAiOutput.cs" />
     <Compile Include="Models\TtsModels.cs" />
     <Compile Include="Models\Widgets\WidgetContainer.cs" />
     <Compile Include="NewStartingForm.cs">
@@ -412,6 +419,8 @@
     <Compile Include="Services\Abstraction\IAutoWidgetProcessor.cs" />
     <Compile Include="Services\Abstraction\IWidgetFileParserQuiz.cs" />
     <Compile Include="Services\Abstraction\IWidgetFileParser.cs" />
+    <Compile Include="Services\AiConfigurationService.cs" />
+    <Compile Include="Services\AiPreferenceResolver.cs" />
     <Compile Include="Services\AnimationWidgetProcessor.cs" />
     <Compile Include="Services\AudioQualityEngine.cs" />
     <Compile Include="Services\AzurePronunciationAssessmentService.cs" />
@@ -421,6 +430,7 @@
     <Compile Include="Services\CaptionFormService.cs" />
     <Compile Include="Services\CaptionWidgetProcessor.cs" />
     <Compile Include="Services\ConfirmationListStore.cs" />
+    <Compile Include="Services\ContentAiService.cs" />
     <Compile Include="Services\ContentNameGeneratorService.cs" />
     <Compile Include="Services\AutoConfigGeneratorParserFactory.cs" />
     <Compile Include="Services\ContentRepository.cs" />
@@ -438,6 +448,9 @@
     <Compile Include="Services\Mp3ToWavConverter.cs" />
     <Compile Include="Services\OpenAiGuideService.cs" />
     <Compile Include="Services\OpenAiTranscriptionService.cs" />
+    <Compile Include="Services\Prompts\GuidePromptBuilder.cs" />
+    <Compile Include="Services\Prompts\QuizPromptBuilder.cs" />
+    <Compile Include="Services\PromptTemplateRenderer.cs" />
     <Compile Include="Services\QuizExcelFileParser.cs" />
     <Compile Include="Services\QuizWidgetProcessor.cs" />
     <Compile Include="Services\QuizCsvFileParser.cs" />

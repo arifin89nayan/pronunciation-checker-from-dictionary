@@ -40,6 +40,8 @@
             this.btnEdit = new System.Windows.Forms.Button();
             this.btnApprove = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
+            this.btnPrevious = new System.Windows.Forms.Button();
+            this.ExitBnt = new System.Windows.Forms.Button();
             this.pnlHeader.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -158,11 +160,37 @@
             this.btnNext.UseVisualStyleBackColor = true;
             this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
             // 
+            // btnPrevious
+            // 
+            this.btnPrevious.Location = new System.Drawing.Point(460, 983);
+            this.btnPrevious.Name = "btnPrevious";
+            this.btnPrevious.Size = new System.Drawing.Size(128, 66);
+            this.btnPrevious.TabIndex = 10;
+            this.btnPrevious.Text = "Back";
+            this.btnPrevious.UseVisualStyleBackColor = true;
+            this.btnPrevious.Click += new System.EventHandler(this.btnPrevious_Click);
+            // 
+            // ExitBnt
+            // 
+            this.ExitBnt.BackColor = System.Drawing.Color.Red;
+            this.ExitBnt.Font = new System.Drawing.Font("MS UI Gothic", 24F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(128)));
+            this.ExitBnt.ForeColor = System.Drawing.Color.White;
+            this.ExitBnt.Location = new System.Drawing.Point(1647, 970);
+            this.ExitBnt.Margin = new System.Windows.Forms.Padding(5, 4, 5, 4);
+            this.ExitBnt.Name = "ExitBnt";
+            this.ExitBnt.Size = new System.Drawing.Size(196, 71);
+            this.ExitBnt.TabIndex = 13;
+            this.ExitBnt.Text = "Exit";
+            this.ExitBnt.UseVisualStyleBackColor = false;
+            this.ExitBnt.Click += new System.EventHandler(this.ExitBnt_Click);
+            // 
             // AiContentReviewForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(2148, 1269);
+            this.Controls.Add(this.ExitBnt);
+            this.Controls.Add(this.btnPrevious);
             this.Controls.Add(this.btnNext);
             this.Controls.Add(this.btnApprove);
             this.Controls.Add(this.btnEdit);
@@ -196,5 +224,7 @@
         private System.Windows.Forms.Button btnEdit;
         private System.Windows.Forms.Button btnApprove;
         private System.Windows.Forms.Button btnNext;
+        private System.Windows.Forms.Button btnPrevious;
+        private System.Windows.Forms.Button ExitBnt;
     }
 }
